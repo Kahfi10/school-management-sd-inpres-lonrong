@@ -10,6 +10,7 @@ import { renderSarprasView } from './modules/sarpras/sarpras_view';
 import { renderJurnalView } from './modules/jurnal/jurnal_view';
 import { renderBukuTamuView } from './modules/bukutamu/bukutamu_view';
 import { openSecurityCenterModal } from './modules/security/security_view';
+import { openCloudSyncModal } from './modules/sync/cloud_sync_modal';
 import type { UserAccount } from './db/local_db';
 
 let currentNav = 'dashboard';
@@ -239,9 +240,53 @@ function setupTheme() {
   });
 }
 
+// PWA & Service Worker Initialization
+function initPwaServiceWorker() {
+  if ('serviceWorker' in navigator && (window.location.protocol.startsWith('http') || window.location.hostname === 'localhost')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => {
+          console.log('[PWA] Service Worker registered successfully, scope:', reg.scope);
+        })
+        .catch((err) => {
+          console.warn('[PWA] Service Worker registration failed:', err);
+        });
+    });
+  }
+
+  // Handle BeforeInstallPrompt for PWA Install Button
+  let deferredInstallPrompt: any = null;
+  const btnInstall = document.getElementById('btnPwaInstall');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (btnInstall) {
+      btnInstall.style.display = 'inline-flex';
+    }
+  });
+
+  btnInstall?.addEventListener('click', async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      console.log('[PWA] User choice:', outcome);
+      deferredInstallPrompt = null;
+      btnInstall.style.display = 'none';
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    console.log('[PWA] Application successfully installed to homescreen!');
+    if (btnInstall) btnInstall.style.display = 'none';
+  });
+}
+
 // Global Event Listeners Setup
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
+  initPwaServiceWorker();
 
   // Navigation clicks with Route Protection (Point 8)
   document.querySelectorAll('#sidebarNav .nav-item').forEach((item) => {
@@ -250,6 +295,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (navKey) navigateTo(navKey);
     });
   });
+
+  // Cloud Sync Modal Trigger
+  document.getElementById('btnCloudSync')?.addEventListener('click', () => {
+    openCloudSyncModal();
+  });
+
+  // Make Sync Status Pill clickable to open Cloud Sync Modal
+  const syncPill = document.getElementById('syncStatusPill');
+  if (syncPill) {
+    syncPill.style.cursor = 'pointer';
+    syncPill.addEventListener('click', () => {
+      openCloudSyncModal();
+    });
+  }
 
   // Security Center & 20-Point Audit Modal
   document.getElementById('btnSecurityCenter')?.addEventListener('click', () => {
@@ -273,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Card & Shortcut Navigation Handler
   (window as any).appNavigate = navigateTo;
+  (window as any).openCloudSyncModal = openCloudSyncModal;
   window.addEventListener('app:navigate', (e: any) => {
     if (e.detail) navigateTo(e.detail);
   });

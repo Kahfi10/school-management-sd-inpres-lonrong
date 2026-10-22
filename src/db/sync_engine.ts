@@ -1,4 +1,5 @@
 import { db, type SyncOutboxRecord, registerDbMutationListener, type DbMutationAction } from './local_db';
+import { cloudSyncService } from './cloud_sync_service';
 
 export type SyncState = 'online_synced' | 'syncing' | 'offline' | 'error';
 
@@ -291,13 +292,18 @@ class RealTimeSyncEngine {
       // Real-time edge sync simulation with minimal latency (50ms per item)
       for (const item of pendingItems) {
         try {
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          // 1. Push to Cloud Provider (Supabase / Google Sheets) if configured
+          const cloudPushed = await cloudSyncService.pushMutation(item);
 
-          // Mark as synced locally
-          await db.syncOutbox.update(item.id, {
-            status: 'synced',
-          });
-          processed++;
+          if (cloudPushed) {
+            // Mark as synced locally
+            await db.syncOutbox.update(item.id, {
+              status: 'synced',
+            });
+            processed++;
+          } else {
+            throw new Error('Cloud push returned false');
+          }
         } catch (err) {
           errors++;
           await db.syncOutbox.update(item.id, {
