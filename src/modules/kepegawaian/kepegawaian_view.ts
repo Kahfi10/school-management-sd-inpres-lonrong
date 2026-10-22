@@ -35,7 +35,7 @@ export async function renderKepegawaianView(container: HTMLElement) {
         <!-- Header Toolbar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.35rem; flex-wrap: wrap; gap: 1rem;">
           <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">Kepegawaian & Beban Ajar</h1>
+            <h1 style="font-size: 1.4rem; font-weight: 700; letter-spacing: -0.015em;">Kepegawaian & Beban Ajar</h1>
             <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin-top: 0.15rem;">
               Manajemen Data GTK & Alokasi Jam Mengajar Kurikulum Merdeka (Standar 24 Jam/Minggu)
             </p>
@@ -55,47 +55,57 @@ export async function renderKepegawaianView(container: HTMLElement) {
         <!-- Informative Metrics Summary Strip -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.35rem;">
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Total Pendidik & Tendik</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Orang</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Total Pendidik & Tendik</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Orang</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">1 Kepsek, 6 Guru, 1 Tendik</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Status Formasi Kepegawaian</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-blue); margin: 2px 0;">${pnsCount} PNS <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">• ${pppkCount} PPPK</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Status Formasi Kepegawaian</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">${pnsCount} PNS <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">• ${pppkCount} PPPK</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">${honorerCount} Honorer Daerah Terdata</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Kepatuhan Beban Ajar</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">${compliantCount}/${guruOnly.length} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Guru</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Kepatuhan Beban Ajar</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">${compliantCount}/${guruOnly.length} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Guru</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">${Math.round((compliantCount / (guruOnly.length || 1)) * 100)}% Memenuhi Minimal 24 JJM</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Total Beban Mengajar</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-orange); margin: 2px 0;">${totalJamSemua} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Jam / Minggu</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Total Beban Mengajar</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-orange); margin: 2px 0;">${totalJamSemua} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Jam / Minggu</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Tatap Muka Kurikulum Merdeka</div>
           </div>
         </div>
 
         <!-- Grid Pegawai Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.35rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.25rem;">
           ${list
             .map((p) => {
               const assigned = bebanMap[p.id] || [];
               const totalJJM = assigned.reduce((acc, curr) => acc + curr.jumlahJamMinggu, 0);
               const isMemenuhi = totalJJM >= 24;
 
+              // Group schedule by subject to avoid repeating "Pendidikan Agama Islam (PAI)" 6 times
+              const mapelSummary: Record<string, { totalHours: number; days: { day: string; hours: number }[] }> = {};
+              for (const b of assigned) {
+                if (!mapelSummary[b.mataPelajaran]) {
+                  mapelSummary[b.mataPelajaran] = { totalHours: 0, days: [] };
+                }
+                mapelSummary[b.mataPelajaran].totalHours += b.jumlahJamMinggu;
+                mapelSummary[b.mataPelajaran].days.push({ day: b.hariMengajar, hours: b.jumlahJamMinggu });
+              }
+
               return `
-              <div class="bento-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.45rem 1.6rem; gap: 1.15rem;">
+              <div class="bento-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.35rem 1.5rem; gap: 1rem;">
                 <div>
                   <!-- Header: Avatar, Name & Status Pill -->
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.85rem;">
                     <div style="display: flex; gap: 0.75rem; align-items: center;">
-                      <div class="user-avatar" style="width: 44px; height: 44px; font-size: 1.1rem; border-radius: var(--radius-sm); font-weight: 800; flex-shrink: 0;">
+                      <div class="user-avatar" style="width: 42px; height: 42px; font-size: 1.05rem; border-radius: var(--radius-sm); font-weight: 700; flex-shrink: 0;">
                         ${p.namaLengkap.charAt(0)}
                       </div>
                       <div>
-                        <div style="font-weight: 700; font-size: 1.05rem; color: var(--apple-text-primary); letter-spacing: -0.015em; line-height: 1.3;">${p.namaLengkap}</div>
-                        <div style="font-size: 0.82rem; color: var(--apple-text-secondary); font-family: var(--font-family-mono); margin-top: 2px;">
+                        <div style="font-weight: 650; font-size: 1.02rem; color: var(--apple-text-primary); letter-spacing: -0.015em; line-height: 1.3;">${p.namaLengkap}</div>
+                        <div style="font-size: 0.8rem; color: var(--apple-text-secondary); margin-top: 2px;">
                           NIP: ${p.nipNuptk}
                         </div>
                       </div>
@@ -108,67 +118,85 @@ export async function renderKepegawaianView(container: HTMLElement) {
                   </div>
 
                   <!-- Metadata: Jabatan & Pangkat/Golongan -->
-                  <div style="padding: 0.75rem 0.95rem; background: var(--apple-surface-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--radius-md); margin-bottom: 0.85rem; font-size: 0.85rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <div style="padding: 0.65rem 0.85rem; background: var(--apple-surface-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--radius-sm); margin-bottom: 0.85rem; font-size: 0.82rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                       <span style="color: var(--apple-text-secondary); font-weight: 500;">Jabatan / Tugas:</span>
-                      <strong style="color: var(--apple-text-primary); text-align: right;">${p.jabatan}</strong>
+                      <strong style="color: var(--apple-text-primary); font-weight: 600; text-align: right;">${p.jabatan}</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between;">
                       <span style="color: var(--apple-text-secondary); font-weight: 500;">Pangkat / Golongan:</span>
-                      <strong style="color: var(--apple-text-primary); text-align: right;">${p.pangkatGolongan}</strong>
+                      <strong style="color: var(--apple-text-primary); font-weight: 600; text-align: right;">${p.pangkatGolongan}</strong>
                     </div>
                   </div>
 
-                  <!-- Beban Mengajar Progress Bar -->
+                  <!-- Beban Mengajar Rapi & Ringan (Redesigned) -->
                   ${
                     p.jabatan.includes('Guru')
                       ? `
-                    <div style="margin-bottom: 0.85rem;">
-                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-size: 0.82rem;">
-                        <span style="font-weight: 600; color: var(--apple-text-secondary);">Beban Mengajar:</span>
-                        <span style="font-weight: 700; color: ${isMemenuhi ? 'var(--apple-green)' : 'var(--apple-orange)'};">
-                          ${totalJJM} / 24 JJM (${isMemenuhi ? 'Terpenuhi' : 'Kurang'})
-                        </span>
+                    <div style="display: flex; flex-direction: column; gap: 0.55rem;">
+                      <!-- Status Pill & Minimalist Track -->
+                      <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                          <span style="font-size: 0.78rem; font-weight: 500; color: var(--apple-text-secondary);">Beban Mengajar:</span>
+                          <span class="status-pill ${isMemenuhi ? 'success' : 'warning'}" style="font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem;">
+                            ${totalJJM} / 24 JJM • ${isMemenuhi ? 'Terpenuhi' : 'Kurang ' + (24 - totalJJM) + ' Jam'}
+                          </span>
+                        </div>
+                        <div style="width: 100%; height: 3.5px; background: var(--apple-surface-tertiary); border-radius: var(--radius-full); overflow: hidden;">
+                          <div style="width: ${Math.min((totalJJM / 24) * 100, 100)}%; height: 100%; background: ${
+                            isMemenuhi ? 'var(--apple-green)' : 'var(--apple-orange)'
+                          }; border-radius: var(--radius-full);"></div>
+                        </div>
                       </div>
-                      <div style="width: 100%; height: 7px; background: var(--apple-surface-tertiary); border-radius: var(--radius-full); overflow: hidden;">
-                        <div style="width: ${Math.min((totalJJM / 24) * 100, 100)}%; height: 100%; background: ${
-                          isMemenuhi ? 'var(--apple-green)' : 'var(--apple-orange)'
-                        }; border-radius: var(--radius-full); transition: width 0.3s ease;"></div>
-                      </div>
-                    </div>
 
-                    <!-- List Jadwal Mapel -->
-                    <div style="font-size: 0.82rem; color: var(--apple-text-secondary); max-height: 85px; overflow-y: auto;">
-                      ${
-                        assigned.length > 0
-                          ? assigned
-                              .map(
-                                (b) => `
-                            <div style="padding: 0.3rem 0; border-bottom: 1px dashed var(--apple-border-subtle); display: flex; justify-content: space-between; align-items: center;">
-                              <span style="color: var(--apple-text-primary); font-weight: 500;">${b.mataPelajaran}</span>
-                              <strong style="color: var(--apple-text-primary);">${b.jumlahJamMinggu} Jam (${b.hariMengajar})</strong>
-                            </div>
-                          `
-                              )
-                              .join('')
-                          : '<div style="font-style: italic; color: var(--apple-text-tertiary); padding: 0.35rem 0;">Belum ada alokasi jadwal beban ajar.</div>'
-                      }
+                      <!-- Grouped Subject Cards -->
+                      <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        ${
+                          Object.keys(mapelSummary).length > 0
+                            ? Object.entries(mapelSummary)
+                                .map(
+                                  ([mapel, data]) => `
+                              <div style="background: var(--apple-surface-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--radius-xs); padding: 0.5rem 0.65rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                  <span style="font-size: 0.8rem; font-weight: 600; color: var(--apple-text-primary);">${mapel}</span>
+                                  <span style="font-size: 0.72rem; font-weight: 600; color: var(--apple-text-secondary); background: var(--apple-surface); border: 1px solid var(--apple-border-subtle); padding: 0.08rem 0.4rem; border-radius: 4px; white-space: nowrap; margin-left: 0.4rem;">
+                                    ${data.totalHours} Jam / mgg
+                                  </span>
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.3rem;">
+                                  ${data.days
+                                    .map(
+                                      (d) => `
+                                    <span style="font-size: 0.72rem; color: var(--apple-text-secondary); background: var(--apple-surface); border: 1px solid var(--apple-border-subtle); padding: 0.1rem 0.4rem; border-radius: 4px;">
+                                      ${d.day} (${d.hours}J)
+                                    </span>
+                                  `
+                                    )
+                                    .join('')}
+                                </div>
+                              </div>
+                            `
+                                )
+                                .join('')
+                            : '<div style="font-size: 0.78rem; font-style: italic; color: var(--apple-text-tertiary); padding: 0.25rem 0;">Belum ada alokasi jadwal beban ajar.</div>'
+                        }
+                      </div>
                     </div>
                   `
                       : `
-                    <div style="padding: 0.65rem 0.85rem; background: var(--apple-surface-tertiary); border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--apple-text-secondary); line-height: 1.4;">
+                    <div style="padding: 0.65rem 0.85rem; background: var(--apple-surface-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
                       Tugas Manajerial Administrasi & Layanan Sistem Informasi Sekolah
                     </div>
                   `
                   }
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--apple-border-subtle); font-size: 0.82rem; color: var(--apple-text-secondary);">
-                  <a href="https://wa.me/${p.noHp.replace(/^0/, '62')}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; color: var(--apple-blue); text-decoration: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; padding-top: 0.65rem; border-top: 1px solid var(--apple-border-subtle); font-size: 0.8rem; color: var(--apple-text-secondary);">
+                  <a href="https://wa.me/${p.noHp.replace(/^0/, '62')}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 500; color: var(--apple-blue); text-decoration: none;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                     ${p.noHp} (WhatsApp ↗)
                   </a>
-                  <button class="apple-btn apple-btn-ghost btn-delete-pegawai" data-id="${p.id}" style="color: var(--apple-red); font-size: 0.82rem; padding: 0.4rem 0.65rem;">
+                  <button class="apple-btn apple-btn-ghost btn-delete-pegawai" data-id="${p.id}" style="color: var(--apple-red); font-size: 0.8rem; padding: 0.35rem 0.6rem;">
                     Hapus
                   </button>
                 </div>

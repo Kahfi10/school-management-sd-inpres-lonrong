@@ -34,7 +34,7 @@ export async function renderBukuTamuView(container: HTMLElement) {
               <span class="status-pill neutral">Resepsionis Digital Aktif</span>
               <span style="font-size: 0.73rem; color: var(--apple-text-tertiary);">Meja Piket & Front Office SD Inpres Lonrong</span>
             </div>
-            <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">Buku Tamu & Kunjungan Digital</h1>
+            <h1 style="font-size: 1.4rem; font-weight: 700; letter-spacing: -0.015em;">Buku Tamu & Kunjungan Digital</h1>
             <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin-top: 0.15rem;">
               Pencatatan Tamu Kedinasan, Pengawas Pembina, dan Wali Murid dengan Tanda Tangan Digital
             </p>
@@ -50,23 +50,23 @@ export async function renderBukuTamuView(container: HTMLElement) {
         <!-- Informative Metrics Summary Strip -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.35rem;">
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Total Kunjungan</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Tamu Terdaftar</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Total Kunjungan</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Tamu Terdaftar</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Buku Tamu Meja Resepsionis</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Kunjungan Kedinasan</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-blue); margin: 2px 0;">${dinasCount} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Tamu</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Kunjungan Kedinasan</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">${dinasCount} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Tamu</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Dinas Pendidikan Kab. Bantaeng</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Supervisi Pengawas</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">${pengawasCount} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Tamu</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Supervisi Pengawas</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">${pengawasCount} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Tamu</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Supervisi Manajerial & Akademik</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Wali Murid & Mitra</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-orange); margin: 2px 0;">${waliCount + umumCount} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Tamu</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Wali Murid & Mitra</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-orange); margin: 2px 0;">${waliCount + umumCount} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Tamu</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Konsultasi & Koordinasi Sekolah</div>
           </div>
         </div>

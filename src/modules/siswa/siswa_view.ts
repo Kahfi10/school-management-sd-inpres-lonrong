@@ -139,7 +139,7 @@ export async function renderSiswaView(container: HTMLElement) {
       <!-- Header Toolbar -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.35rem; flex-wrap: wrap; gap: 1rem;">
         <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">Manajemen Siswa & Alumni</h1>
+          <h1 style="font-size: 1.4rem; font-weight: 700; letter-spacing: -0.015em;">Manajemen Siswa & Alumni</h1>
           <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin-top: 0.15rem;">
             Buku Induk Elektronik Peserta Didik SD Inpres Lonrong
           </p>
@@ -167,23 +167,23 @@ export async function renderSiswaView(container: HTMLElement) {
       <!-- Informative Metrics Summary Strip -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.15rem;">
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Total Siswa Aktif</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-text-primary); margin: 2px 0;">12 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Siswa</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Total Siswa Aktif</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-text-primary); margin: 2px 0;">12 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Siswa</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">7 Laki-Laki • 5 Perempuan • 100% Terdaftar</div>
         </div>
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Fase A (Kelas 1-2)</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-blue); margin: 2px 0;">4 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Siswa</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Fase A (Kelas 1-2)</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">4 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Siswa</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Fondasi Literasi & Numerasi Awal</div>
         </div>
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Fase B (Kelas 3-4)</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">4 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Siswa</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Fase B (Kelas 3-4)</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">4 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Siswa</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Penguatan Kompetensi & Projek P5</div>
         </div>
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Fase C (Kelas 5-6)</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-orange); margin: 2px 0;">4 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Siswa</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Fase C (Kelas 5-6)</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-orange); margin: 2px 0;">4 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Siswa</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Persiapan Kelulusan & Transisi SMP</div>
         </div>
       </div>

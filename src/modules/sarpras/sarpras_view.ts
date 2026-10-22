@@ -158,7 +158,7 @@ export async function renderSarprasView(container: HTMLElement) {
       <!-- Header Toolbar -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.35rem; flex-wrap: wrap; gap: 1rem;">
         <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">Inventaris Sarana & Prasarana</h1>
+          <h1 style="font-size: 1.4rem; font-weight: 700; letter-spacing: -0.015em;">Inventaris Sarana & Prasarana</h1>
           <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin-top: 0.15rem;">
             Pencatatan Aset Barang Sekolah Dasar Inpres Lonrong Sesuai Standar KIB A-E
           </p>
@@ -174,23 +174,23 @@ export async function renderSarprasView(container: HTMLElement) {
       <!-- Informative Metrics Summary Strip -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.35rem;">
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Total Inventaris Sekolah</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-text-primary); margin: 2px 0;">261 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Total Unit</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Total Inventaris Sekolah</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-text-primary); margin: 2px 0;">261 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Total Unit</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">6 Kategori Inventaris KIB Aktif</div>
         </div>
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">KIB B (Peralatan TIK & Mesin)</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-blue); margin: 2px 0;">18 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Unit</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">KIB B (Peralatan TIK & Mesin)</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">18 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Unit</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Chromebook, InFocus, Printer TU</div>
         </div>
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">KIB C (Gedung & Ruangan)</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-orange); margin: 2px 0;">2 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Gedung</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">KIB C (Gedung & Ruangan)</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-orange); margin: 2px 0;">2 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Gedung</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Ruang Kelas 1-3 & Perpustakaan</div>
         </div>
         <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">KIB E (Buku Teks & APE)</div>
-          <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">240 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Eksemplar</span></div>
+          <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">KIB E (Buku Teks & APE)</div>
+          <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">240 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Eksemplar</span></div>
           <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">100% Kondisi Baik & Layak</div>
         </div>
       </div>

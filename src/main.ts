@@ -11,6 +11,7 @@ import { renderJurnalView } from './modules/jurnal/jurnal_view';
 import { renderBukuTamuView } from './modules/bukutamu/bukutamu_view';
 import { openSecurityCenterModal } from './modules/security/security_view';
 import { openCloudSyncModal } from './modules/sync/cloud_sync_modal';
+import { renderPageSkeleton } from './utils/skeleton_loader';
 import type { UserAccount } from './db/local_db';
 
 let currentNav = 'dashboard';
@@ -113,11 +114,11 @@ function navigateTo(navKey: string) {
   const currentUser = authService.getCurrentUser();
   if (navKey === 'efiling' && currentUser?.role === 'guru') {
     viewContent.innerHTML = `
-      <div class="page-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 55vh; text-align: center; padding: 2rem;">
+      <div class="page-container view-fade-in" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 55vh; text-align: center; padding: 2rem;">
         <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(255, 149, 0, 0.12); color: var(--apple-orange); display: flex; align-items: center; justify-content: center; margin-bottom: 1.15rem;">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         </div>
-        <h2 style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.015em; margin-bottom: 0.35rem;">Akses Dibatasi (RBAC Route Guard)</h2>
+        <h2 style="font-size: 1.35rem; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 0.35rem;">Akses Dibatasi (RBAC Route Guard)</h2>
         <p style="font-size: 0.88rem; color: var(--apple-text-secondary); max-width: 500px; line-height: 1.5; margin-bottom: 1.35rem;">
           Modul E-Filing Arsip Digital Google Drive dibatasi khusus untuk <b>Super Admin (Kepala Sekolah)</b> dan <b>Tenaga Administrasi / Operator Dapodik</b>.
         </p>
@@ -129,31 +130,46 @@ function navigateTo(navKey: string) {
     return;
   }
 
-  switch (navKey) {
-    case 'dashboard':
-      renderDashboardView(viewContent);
-      break;
-    case 'siswa':
-      renderSiswaView(viewContent);
-      break;
-    case 'kepegawaian':
-      renderKepegawaianView(viewContent);
-      break;
-    case 'efiling':
-      renderEfilingView(viewContent);
-      break;
-    case 'sarpras':
-      renderSarprasView(viewContent);
-      break;
-    case 'jurnal':
-      renderJurnalView(viewContent);
-      break;
-    case 'bukutamu':
-      renderBukuTamuView(viewContent);
-      break;
-    default:
-      renderDashboardView(viewContent);
-  }
+  // 1. Render tailored Apple HIG Skeleton immediately for smooth transition
+  renderPageSkeleton(viewContent, navKey);
+
+  // 2. Render actual view with smooth fade-in
+  const targetNav = navKey;
+  setTimeout(async () => {
+    if (currentNav !== targetNav) return;
+
+    switch (targetNav) {
+      case 'dashboard':
+        await renderDashboardView(viewContent);
+        break;
+      case 'siswa':
+        await renderSiswaView(viewContent);
+        break;
+      case 'kepegawaian':
+        await renderKepegawaianView(viewContent);
+        break;
+      case 'efiling':
+        await renderEfilingView(viewContent);
+        break;
+      case 'sarpras':
+        await renderSarprasView(viewContent);
+        break;
+      case 'jurnal':
+        await renderJurnalView(viewContent);
+        break;
+      case 'bukutamu':
+        await renderBukuTamuView(viewContent);
+        break;
+      default:
+        await renderDashboardView(viewContent);
+    }
+
+    // Apply view fade-in animation
+    const container = viewContent.querySelector('.page-container') || viewContent.firstElementChild;
+    if (container) {
+      container.classList.add('view-fade-in');
+    }
+  }, 90);
 }
 
 function setupSyncTelemetry() {

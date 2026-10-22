@@ -32,7 +32,7 @@ export async function renderJurnalView(container: HTMLElement) {
               <span class="status-pill neutral">Terintegrasi E-Kinerja</span>
               <span style="font-size: 0.73rem; color: var(--apple-text-tertiary);">Bukti Dukung SKP BKN & Kemdikbud</span>
             </div>
-            <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">Jurnal & Program Kerja Harian</h1>
+            <h1 style="font-size: 1.4rem; font-weight: 700; letter-spacing: -0.015em;">Jurnal & Program Kerja Harian</h1>
             <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin-top: 0.15rem;">
               Pencatatan Aktivitas Harian Guru & Tendik untuk Bukti Dukung Sasaran Kinerja Pegawai (E-Kinerja)
             </p>
@@ -52,23 +52,23 @@ export async function renderJurnalView(container: HTMLElement) {
         <!-- Informative Metrics Summary Strip -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.35rem;">
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Total Jurnal Harian</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Aktivitas</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Total Jurnal Harian</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Aktivitas</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Bukti Dukung E-Kinerja BKN</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Status Verifikasi Kepsek</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">${disetujuiCount} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Disetujui • ${diajukanCount} Menunggu</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Status Verifikasi Kepsek</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">${disetujuiCount} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Disetujui • ${diajukanCount} Menunggu</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Validasi Kepala Sekolah</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Partisipasi Guru & Tendik</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-blue); margin: 2px 0;">${contributorCount} / ${pegawaiList.length} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">GTK Aktif</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Partisipasi Guru & Tendik</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">${contributorCount} / ${pegawaiList.length} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">GTK Aktif</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Kontribusi Harian Berjalan</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Kepatuhan Kinerja</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">100% <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">• Sesuai RKH</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Kepatuhan Kinerja</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">100% <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">• Sesuai RKH</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Target SKP Triwulan Tercapai</div>
           </div>
         </div>

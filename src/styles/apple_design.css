@@ -59,9 +59,9 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Typography Scale */
-  --font-family-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
-  --font-family-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, monospace;
+  /* Typography Scale - High Legibility System Sans-Serif */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* Animation Curves */
   --spring-bounce: cubic-bezier(0.16, 1, 0.3, 1);
@@ -69,6 +69,61 @@
   --duration-fast: 160ms;
   --duration-normal: 240ms;
   --duration-slow: 360ms;
+}
+
+/* ==========================================================================
+   APPLE HIG SKELETON LOADERS & SMOOTH VIEW TRANSITIONS
+   ========================================================================== */
+
+.apple-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--apple-surface-tertiary) 0%,
+    var(--apple-surface-secondary) 50%,
+    var(--apple-surface-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: appleSkeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-xs);
+  display: inline-block;
+}
+
+@keyframes appleSkeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-card {
+  pointer-events: none;
+  border-color: var(--apple-border-subtle) !important;
+}
+
+.view-fade-in {
+  animation: appleViewFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes appleViewFadeIn {
+  from {
+    opacity: 0.85;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appleSkeletonEnter {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Dark Mode Overrides */
@@ -528,8 +583,8 @@ p {
 }
 
 .bento-card .card-title {
-  font-size: 1.08rem;
-  font-weight: 700;
+  font-size: 1.02rem;
+  font-weight: 600;
   color: var(--apple-text-primary);
   display: flex;
   align-items: center;
@@ -537,10 +592,10 @@ p {
 }
 
 .bento-card .metric-val {
-  font-size: 2.85rem;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
+  font-size: 2.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   color: var(--apple-text-primary);
 }
 

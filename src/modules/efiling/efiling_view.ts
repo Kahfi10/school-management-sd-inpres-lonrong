@@ -34,7 +34,7 @@ export async function renderEfilingView(container: HTMLElement) {
                 drive.google.com/folders/sd_inpres_lonrong_arsip
               </span>
             </div>
-            <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">E-Filing (Arsip Digital Google Drive)</h1>
+            <h1 style="font-size: 1.4rem; font-weight: 700; letter-spacing: -0.015em;">E-Filing (Arsip Digital Google Drive)</h1>
             <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin-top: 0.15rem;">
               Penyimpanan cloud terpusat untuk SK Kepegawaian, Ijazah, dan Sertifikat Pendidik Guru/Tendik
             </p>
@@ -50,23 +50,23 @@ export async function renderEfilingView(container: HTMLElement) {
         <!-- Informative Metrics Summary Strip -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.35rem;">
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Total Berkas E-Filing</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Dokumen</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Total Berkas E-Filing</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-text-primary); margin: 2px 0;">${list.length} <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Dokumen</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Format PDF Terverifikasi</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">SK Pengangkatan & PBM</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-blue); margin: 2px 0;">2 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Berkas</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">SK Pengangkatan & PBM</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">2 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Berkas</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">SK Kepala Sekolah & Guru</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Sertifikasi & Serdik</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">1 <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">Berkas</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Sertifikasi & Serdik</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">1 <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">Berkas</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Kemendikbudristek RI</div>
           </div>
           <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem;">
-            <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-text-tertiary);">Cloud Google Drive</div>
-            <div style="font-size: 1.55rem; font-weight: 800; color: var(--apple-green); margin: 2px 0;">Aktif <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary);">• Unlimited</span></div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Cloud Google Drive</div>
+            <div style="font-size: 1.45rem; font-weight: 700; color: var(--apple-green); margin: 2px 0;">Aktif <span style="font-size: 0.82rem; font-weight: 500; color: var(--apple-text-secondary);">• Unlimited</span></div>
             <div style="font-size: 0.78rem; color: var(--apple-text-secondary);">Backup Digital Terpadu</div>
           </div>
         </div>

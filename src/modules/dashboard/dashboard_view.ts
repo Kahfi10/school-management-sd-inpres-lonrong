@@ -86,19 +86,19 @@ export async function renderDashboardView(container: HTMLElement) {
               <span class="status-pill info">${SD_LONRONG_PROFILE.kurikulum}</span>
               <span class="status-pill neutral">Dapodik Terverifikasi</span>
             </div>
-            <h1 style="font-size: 1.95rem; font-weight: 800; color: var(--apple-text-primary); letter-spacing: -0.025em; line-height: 1.2;">
+            <h1 style="font-size: 1.65rem; font-weight: 700; color: var(--apple-text-primary); letter-spacing: -0.015em; line-height: 1.25;">
               ${SD_LONRONG_PROFILE.namaSekolah}
             </h1>
-            <p style="font-size: 0.92rem; color: var(--apple-text-secondary); margin-top: 0.25rem;">
+            <p style="font-size: 0.88rem; color: var(--apple-text-secondary); margin-top: 0.25rem;">
               ${SD_LONRONG_PROFILE.alamat}, Desa ${SD_LONRONG_PROFILE.desaKelurahan}, Kec. ${SD_LONRONG_PROFILE.kecamatan}, Kab. ${SD_LONRONG_PROFILE.kabupatenKota}
             </p>
           </div>
         </div>
         <div style="display: flex; gap: 0.75rem;">
-          <div style="background: var(--apple-surface-secondary); padding: 0.85rem 1.35rem; border-radius: var(--radius-md); border: 1px solid var(--apple-border-subtle); text-align: right;">
-            <div style="font-size: 0.74rem; color: var(--apple-text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Tahun Ajaran Aktif</div>
-            <div style="font-size: 1.25rem; font-weight: 800; color: var(--apple-blue); margin: 2px 0;">${SD_LONRONG_PROFILE.tahunAjaran}</div>
-            <div style="font-size: 0.82rem; color: var(--apple-text-secondary); font-weight: 600;">${SD_LONRONG_PROFILE.semesterAktif}</div>
+          <div style="background: var(--apple-surface-secondary); padding: 0.75rem 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--apple-border-subtle); text-align: right;">
+            <div style="font-size: 0.72rem; color: var(--apple-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Tahun Ajaran Aktif</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">${SD_LONRONG_PROFILE.tahunAjaran}</div>
+            <div style="font-size: 0.8rem; color: var(--apple-text-secondary); font-weight: 500;">${SD_LONRONG_PROFILE.semesterAktif}</div>
           </div>
         </div>
       </div>
