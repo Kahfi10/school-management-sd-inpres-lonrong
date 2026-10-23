@@ -1,5 +1,6 @@
 // Cloud Sync Service: Free Multi-User Synchronization via Supabase & Google Apps Script
 import { db, type SyncOutboxRecord } from './local_db';
+import { resolveBatchWithLocal } from './conflict_resolver';
 
 export interface CloudSyncConfig {
   provider: 'none' | 'supabase' | 'googlesheets';
@@ -372,8 +373,21 @@ export class CloudSyncService {
             if (Array.isArray(records) && records.length > 0) {
               const localTable = (db as any)[table];
               if (localTable) {
-                await localTable.bulkPut(records);
-                totalPulled += records.length;
+                const { resolved } = await resolveBatchWithLocal(
+                  records,
+                  (id) => localTable.get(id),
+                  async (recordId) => {
+                    const pendingItem = await db.syncOutbox
+                      .where('recordId')
+                      .equals(recordId)
+                      .and((item) => item.status === 'pending')
+                      .first();
+                    return pendingItem ? JSON.parse(pendingItem.payloadJson || '{}') : undefined;
+                  }
+                );
+
+                await localTable.bulkPut(resolved);
+                totalPulled += resolved.length;
               }
             }
           } else if (res.status !== 404) {
