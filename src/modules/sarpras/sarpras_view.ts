@@ -1,7 +1,6 @@
 import { db, type SarprasRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
 import { SD_LONRONG_PROFILE } from '../../config/school_profile';
-import confetti from 'canvas-confetti';
 
 export async function renderSarprasView(container: HTMLElement) {
   let selectedKib = 'all';
@@ -377,7 +376,6 @@ export async function renderSarprasView(container: HTMLElement) {
 
     await db.sarpras.add(newAset);
     await syncEngine.queueMutation('sarpras', newAset.id, 'create', newAset);
-    confetti({ particleCount: 40, spread: 50 });
     modal.classList.remove('active');
     form.reset();
     renderTable();

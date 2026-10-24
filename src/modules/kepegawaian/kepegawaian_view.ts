@@ -1,6 +1,5 @@
 import { db, type PegawaiRecord, type BebanAjarRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
-import confetti from 'canvas-confetti';
 
 export async function renderKepegawaianView(container: HTMLElement) {
   async function loadData() {
@@ -384,7 +383,6 @@ export async function renderKepegawaianView(container: HTMLElement) {
 
       await db.pegawai.add(newPegawai);
       await syncEngine.queueMutation('pegawai', newPegawai.id, 'create', newPegawai);
-      confetti({ particleCount: 40, spread: 50 });
       modalPegawai.classList.remove('active');
       formPegawai.reset();
       renderContent();
@@ -409,7 +407,6 @@ export async function renderKepegawaianView(container: HTMLElement) {
 
       await db.bebanAjar.add(newBeban);
       await syncEngine.queueMutation('bebanAjar', newBeban.id, 'create', newBeban);
-      confetti({ particleCount: 40, spread: 50 });
       modalBeban.classList.remove('active');
       formBeban.reset();
       renderContent();

@@ -10,7 +10,6 @@ import {
 } from '../../utils/security';
 import { downloadBlob } from '../../utils/export_helper';
 import { authService } from '../auth/auth_service';
-import confetti from 'canvas-confetti';
 
 export function openSecurityCenterModal() {
   const existing = document.getElementById('securityCenterModal');
@@ -341,8 +340,6 @@ export function openSecurityCenterModal() {
       auditResults = audit.results;
       isAuditing = false;
       renderModalContent();
-
-      confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
     });
 
     // Change Password Form
@@ -365,7 +362,6 @@ export function openSecurityCenterModal() {
 
       if (res.success) {
         formPass.reset();
-        confetti({ particleCount: 50, spread: 50 });
       }
     });
 

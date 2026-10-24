@@ -1,7 +1,6 @@
 import { db } from '../../db/local_db';
 import { SD_LONRONG_PROFILE } from '../../config/school_profile';
 import { Chart, registerables } from 'chart.js';
-import confetti from 'canvas-confetti';
 
 Chart.register(...registerables);
 
@@ -532,7 +531,6 @@ export async function renderDashboardView(container: HTMLElement) {
           catatanEvaluasi: 'Disetujui Kepala Sekolah untuk bukti dukung E-Kinerja BKN.',
           updatedAt: new Date().toISOString(),
         });
-        confetti({ particleCount: 35, spread: 50 });
         renderDashboardView(container);
       }
     });

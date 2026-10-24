@@ -4,7 +4,6 @@ import { authService } from '../auth/auth_service';
 import { SD_LONRONG_PROFILE } from '../../config/school_profile';
 import { jsPDF } from 'jspdf';
 import { applyAutoTable, exportDocToPdf } from '../../utils/export_helper';
-import confetti from 'canvas-confetti';
 
 export async function renderJurnalView(container: HTMLElement) {
   const currentUser = authService.getCurrentUser();
@@ -297,7 +296,6 @@ export async function renderJurnalView(container: HTMLElement) {
 
       await db.jurnalKinerja.add(newJurnal);
       await syncEngine.queueMutation('jurnalKinerja', newJurnal.id, 'create', newJurnal);
-      confetti({ particleCount: 40, spread: 50 });
       modal.classList.remove('active');
       renderContent();
     });
@@ -313,7 +311,6 @@ export async function renderJurnalView(container: HTMLElement) {
             updatedAt: new Date().toISOString(),
           });
           await syncEngine.queueMutation('jurnalKinerja', id, 'update', { statusVerifikasi: 'disetujui' });
-          confetti({ particleCount: 50, spread: 60 });
           renderContent();
         }
       });
@@ -373,10 +370,7 @@ export async function renderJurnalView(container: HTMLElement) {
       doc.text(`NIP. ${SD_LONRONG_PROFILE.kepalaSekolah.nip}`, 220, finalY + 32);
 
       const filename = `Rekap_EKinerja_${SD_LONRONG_PROFILE.npsn}_${new Date().toISOString().split('T')[0]}`;
-      const result = exportDocToPdf(doc, filename, true);
-      if (result.success) {
-        confetti({ particleCount: 35, spread: 50 });
-      }
+      exportDocToPdf(doc, filename, true);
     });
   }
 

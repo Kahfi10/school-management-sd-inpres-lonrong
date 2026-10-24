@@ -4,7 +4,6 @@ import { SD_LONRONG_PROFILE } from '../../config/school_profile';
 import { exportDataToExcel, exportDocToPdf, applyAutoTable } from '../../utils/export_helper';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
-import confetti from 'canvas-confetti';
 
 export async function renderSiswaView(container: HTMLElement) {
   let currentFilter = 'aktif';
@@ -496,7 +495,6 @@ export async function renderSiswaView(container: HTMLElement) {
 
     await db.siswa.add(newSiswa);
     await syncEngine.queueMutation('siswa', newSiswa.id, 'create', newSiswa);
-    confetti({ particleCount: 40, spread: 50 });
     modalTambah.classList.remove('active');
     formTambah.reset();
     renderTable();
@@ -643,7 +641,6 @@ export async function renderSiswaView(container: HTMLElement) {
       }
     }
 
-    confetti({ particleCount: 50, spread: 60 });
     alert(`Import Berhasil: ${addedCount} data siswa baru telah ditambahkan.`);
     modalImport.classList.remove('active');
     renderTable();
@@ -668,10 +665,7 @@ export async function renderSiswaView(container: HTMLElement) {
     }));
 
     const filename = `Data_Siswa_${SD_LONRONG_PROFILE.namaSekolah.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}`;
-    const result = exportDataToExcel(exportRows, 'Daftar_Siswa', filename);
-    if (result.success) {
-      confetti({ particleCount: 40, spread: 50 });
-    }
+    exportDataToExcel(exportRows, 'Daftar_Siswa', filename);
   });
 
   // Handle Cetak PDF Formal (Kop Surat Resmi & Auto New Tab Viewer)
@@ -739,10 +733,7 @@ export async function renderSiswaView(container: HTMLElement) {
 
     const filename = `Buku_Induk_Siswa_${SD_LONRONG_PROFILE.npsn}_${new Date().toISOString().split('T')[0]}`;
     // Export and automatically open in preview new tab for instant view/print
-    const result = exportDocToPdf(doc, filename, true);
-    if (result.success) {
-      confetti({ particleCount: 40, spread: 50 });
-    }
+    exportDocToPdf(doc, filename, true);
   });
 
   renderTable();

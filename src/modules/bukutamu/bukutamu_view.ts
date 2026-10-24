@@ -2,7 +2,6 @@ import { db, type BukuTamuRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
 import { SD_LONRONG_PROFILE } from '../../config/school_profile';
 import SignaturePad from 'signature_pad';
-import confetti from 'canvas-confetti';
 
 export async function renderBukuTamuView(container: HTMLElement) {
   let isKioskMode = false;
@@ -311,7 +310,6 @@ export async function renderBukuTamuView(container: HTMLElement) {
         await db.bukuTamu.add(newTamu);
         await syncEngine.queueMutation('bukuTamu', newTamu.id, 'create', newTamu);
 
-        confetti({ particleCount: 50, spread: 60 });
         alert(`Terima kasih Bapak/Ibu ${newTamu.namaTamu}. Kunjungan Anda telah resmi tercatat.`);
         isKioskMode = false;
         renderContent();

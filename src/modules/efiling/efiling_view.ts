@@ -1,6 +1,5 @@
 import { db, type ArsipDigitalRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
-import confetti from 'canvas-confetti';
 
 export async function renderEfilingView(container: HTMLElement) {
   let selectedCategory = 'all';
@@ -311,7 +310,6 @@ export async function renderEfilingView(container: HTMLElement) {
       await db.arsipDigital.add(newArsip);
       await syncEngine.queueMutation('arsipDigital', newArsip.id, 'create', newArsip);
 
-      confetti({ particleCount: 40, spread: 50 });
       modal.classList.remove('active');
       renderContent();
     });

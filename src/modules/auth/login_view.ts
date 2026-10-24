@@ -1,5 +1,4 @@
 import { authService } from './auth_service';
-import confetti from 'canvas-confetti';
 
 export function renderLoginModal(container: HTMLElement, onLoginSuccess: () => void) {
   container.innerHTML = `
@@ -125,7 +124,6 @@ export function renderLoginModal(container: HTMLElement, onLoginSuccess: () => v
 
     const res = await authService.loginWithCredentials(u, p);
     if (res.success) {
-      confetti({ particleCount: 40, spread: 50 });
       onLoginSuccess();
     } else {
       alertBox.style.display = 'block';
@@ -141,7 +139,6 @@ export function renderLoginModal(container: HTMLElement, onLoginSuccess: () => v
     const pin = (container.querySelector('#inputPinCode') as HTMLInputElement).value;
     const res = await authService.loginWithPin(pin);
     if (res.success) {
-      confetti({ particleCount: 40, spread: 50 });
       onLoginSuccess();
     } else {
       alertBox.style.display = 'block';
@@ -156,7 +153,6 @@ export function renderLoginModal(container: HTMLElement, onLoginSuccess: () => v
     btn.addEventListener('click', async (e) => {
       const role = (e.currentTarget as HTMLElement).dataset.role as 'admin' | 'tendik' | 'guru';
       await authService.switchRoleQuick(role);
-      confetti({ particleCount: 40, spread: 50 });
       onLoginSuccess();
     });
   });
