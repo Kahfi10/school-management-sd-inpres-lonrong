@@ -223,40 +223,34 @@ export class LonrongDatabase extends Dexie {
       const table = (this as any)[tableName];
       if (!table || typeof table.hook !== 'function') continue;
 
-      table.hook('creating', (primKey: any, obj: any, trans: any) => {
+      table.hook('creating', (primKey: any, obj: any) => {
         if (this.isSeeding) return;
         const recordId = String(primKey || obj?.id || '');
-        trans.on('complete', () => {
-          setTimeout(() => {
-            if (dbMutationHandler) {
-              dbMutationHandler(tableName, 'create', recordId, obj);
-            }
-          }, 0);
-        });
+        setTimeout(() => {
+          if (dbMutationHandler) {
+            dbMutationHandler(tableName, 'create', recordId, obj);
+          }
+        }, 30);
       });
 
-      table.hook('updating', (modifications: any, primKey: any, obj: any, trans: any) => {
+      table.hook('updating', (modifications: any, primKey: any, obj: any) => {
         if (this.isSeeding) return;
         const recordId = String(primKey || obj?.id || '');
-        trans.on('complete', () => {
-          setTimeout(() => {
-            if (dbMutationHandler) {
-              dbMutationHandler(tableName, 'update', recordId, modifications);
-            }
-          }, 0);
-        });
+        setTimeout(() => {
+          if (dbMutationHandler) {
+            dbMutationHandler(tableName, 'update', recordId, modifications);
+          }
+        }, 30);
       });
 
-      table.hook('deleting', (primKey: any, _obj: any, trans: any) => {
+      table.hook('deleting', (primKey: any) => {
         if (this.isSeeding) return;
         const recordId = String(primKey || '');
-        trans.on('complete', () => {
-          setTimeout(() => {
-            if (dbMutationHandler) {
-              dbMutationHandler(tableName, 'delete', recordId, null);
-            }
-          }, 0);
-        });
+        setTimeout(() => {
+          if (dbMutationHandler) {
+            dbMutationHandler(tableName, 'delete', recordId, null);
+          }
+        }, 30);
       });
     }
   }

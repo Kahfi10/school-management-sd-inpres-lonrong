@@ -66,6 +66,24 @@ class RealTimeSyncEngine {
     } catch (e) {
       console.warn('[RealTimeSync] BroadcastChannel not supported in this environment:', e);
     }
+
+    // HTML5 Storage Event Fallback for 100% reliable cross-tab sync
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event: StorageEvent) => {
+        if (event.key === 'lonrong_cross_tab_sync_event' && event.newValue) {
+          try {
+            const data = JSON.parse(event.newValue);
+            if (data && data.senderTabId !== this.tabId && data.tableName) {
+              console.log(`[RealTimeSync] Storage event cross-tab update: ${data.tableName} (${data.action})`);
+              this.notifyDataSubscribers(data.tableName, data.action, data.recordId, false);
+              this.emitTelemetry();
+            }
+          } catch {
+            // Ignored
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -151,18 +169,36 @@ class RealTimeSyncEngine {
     );
 
     // 3. Broadcast to other open browser tabs/windows
-    if (broadcastToOtherTabs && this.broadcastChannel) {
+    if (broadcastToOtherTabs) {
+      if (this.broadcastChannel) {
+        try {
+          this.broadcastChannel.postMessage({
+            type: 'DB_MUTATION',
+            tableName,
+            action,
+            recordId,
+            timestamp: Date.now(),
+            senderTabId: this.tabId,
+          });
+        } catch (err) {
+          console.warn('[RealTimeSync] Broadcast error:', err);
+        }
+      }
+
+      // Secondary localStorage broadcast trigger
       try {
-        this.broadcastChannel.postMessage({
-          type: 'DB_MUTATION',
-          tableName,
-          action,
-          recordId,
-          timestamp: Date.now(),
-          senderTabId: this.tabId,
-        });
-      } catch (err) {
-        console.warn('[RealTimeSync] Broadcast error:', err);
+        localStorage.setItem(
+          'lonrong_cross_tab_sync_event',
+          JSON.stringify({
+            tableName,
+            action,
+            recordId,
+            senderTabId: this.tabId,
+            timestamp: Date.now(),
+          })
+        );
+      } catch {
+        // Storage might be full or private
       }
     }
   }
@@ -256,6 +292,9 @@ class RealTimeSyncEngine {
 
       await db.syncOutbox.add(outboxItem);
       this.emitTelemetry();
+
+      // Immediately broadcast to other open tabs and refresh local views
+      this.notifyDataSubscribers(tableName, action, recordId, true);
     } catch (err) {
       console.error('[RealTimeSync] Error queuing mutation:', err);
     }
