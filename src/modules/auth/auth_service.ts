@@ -16,8 +16,12 @@ export class AuthService {
   private activityListenerBound = false;
 
   constructor() {
-    this.restoreSession();
     this.initActivityTracker();
+  }
+
+  public async init(): Promise<UserAccount | null> {
+    await this.restoreSession();
+    return this.currentUser;
   }
 
   private async restoreSession() {

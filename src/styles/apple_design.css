@@ -169,6 +169,11 @@
   font-family: var(--font-family-sans);
 }
 
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
 html, body {
   height: 100%;
   font-family: var(--font-family-sans);
@@ -1071,14 +1076,301 @@ p {
   background: var(--apple-surface-secondary);
 }
 
-/* Responsive */
+/* ==========================================================================
+   SPLASH LANDING & DATA PRELOADER SCREEN
+   ========================================================================== */
+.splash-landing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: var(--apple-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-landing-overlay.fade-out {
+  opacity: 0;
+  transform: scale(1.02);
+  pointer-events: none;
+}
+
+.splash-landing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+}
+
+.splash-logo-container {
+  width: 76px;
+  height: 76px;
+  border-radius: var(--radius-lg);
+  background: #FFFFFF;
+  border: 1px solid var(--apple-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin-bottom: 1.25rem;
+  animation: splashPulse 2.2s infinite ease-in-out;
+}
+
+@keyframes splashPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
+  50% { transform: scale(1.04); box-shadow: 0 8px 24px rgba(0, 113, 227, 0.22); }
+}
+
+.splash-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.splash-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--apple-text-primary);
+  margin-bottom: 0.3rem;
+}
+
+.splash-meta {
+  font-size: 0.88rem;
+  color: var(--apple-text-secondary);
+  line-height: 1.45;
+  margin-bottom: 0.25rem;
+}
+
+.splash-npsn {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--apple-text-tertiary);
+  margin-bottom: 1.75rem;
+}
+
+.splash-loader-bar-bg {
+  width: 220px;
+  height: 4px;
+  background: var(--apple-surface-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.splash-loader-bar-fill {
+  height: 100%;
+  width: 10%;
+  background: #1D4ED8;
+  border-radius: var(--radius-full);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-status-text {
+  font-size: 0.8rem;
+  color: var(--apple-text-secondary);
+  font-weight: 400;
+  min-height: 1.2rem;
+}
+
+/* ==========================================================================
+   SECURE AUTH PORTAL FULLSCREEN GATE
+   ========================================================================== */
+.auth-portal-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 80000;
+  background: var(--apple-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 430px;
+  background: var(--apple-surface);
+  border: 1px solid var(--apple-border);
+  border-radius: var(--radius-xl);
+  padding: 2.25rem 2rem;
+  box-shadow: var(--apple-shadow-lg);
+  animation: appleViewFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.65rem;
+}
+
+.auth-school-badge {
+  width: 58px;
+  height: 58px;
+  max-width: 58px;
+  max-height: 58px;
+  overflow: hidden;
+  margin: 0 auto 0.9rem auto;
+  border-radius: var(--radius-md);
+  background: #FFFFFF;
+  border: 1px solid var(--apple-border);
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-school-badge img {
+  width: 100%;
+  height: 100%;
+  max-width: 46px;
+  max-height: 46px;
+  object-fit: contain;
+}
+
+.auth-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--apple-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.auth-subtitle {
+  font-size: 0.82rem;
+  color: var(--apple-text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.auth-footer-note {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--apple-border-subtle);
+  font-size: 0.72rem;
+  color: var(--apple-text-tertiary);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS OVERHAUL
+   ========================================================================== */
+.mobile-menu-toggle {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 85;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
 @media (max-width: 900px) {
-  .apple-sidebar {
-    position: fixed;
-    left: -250px;
+  .mobile-menu-toggle {
+    display: inline-flex !important;
   }
+
+  .apple-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: min(280px, 82vw) !important;
+    height: 100vh !important;
+    z-index: 90 !important;
+    transform: translateX(-100%) !important;
+    box-shadow: none;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important;
+  }
+
   .apple-sidebar.open {
-    transform: translateX(250px);
+    transform: translateX(0) !important;
+    box-shadow: 0 0 32px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  .top-navbar {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .top-navbar .header-date-badge {
+    display: none !important;
+  }
+
+  .top-navbar .sync-pill {
+    padding: 0.25rem 0.55rem !important;
+  }
+
+  #syncStatusText {
+    display: none !important;
+  }
+
+  .page-container {
+    padding: 1rem 0.85rem !important;
+  }
+
+  .bento-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .bento-grid > div,
+  .bento-card {
+    grid-column: 1 / -1 !important;
+  }
+
+  .apple-table-card {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+  }
+
+  .table-search-box {
+    width: 100% !important;
+  }
+
+  .auth-card {
+    padding: 1.75rem 1.25rem !important;
+    border-radius: var(--radius-lg) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .top-navbar h1 {
+    font-size: 1.05rem !important;
+  }
+
+  .apple-btn {
+    font-size: 0.8rem !important;
+  }
+
+  .modal-sheet {
+    max-width: 95vw !important;
+    padding: 1.25rem 1rem !important;
   }
 }
 

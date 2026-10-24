@@ -1,106 +1,120 @@
 import { authService } from './auth_service';
 
 export function renderLoginModal(container: HTMLElement, onLoginSuccess: () => void) {
+  renderAuthPortal(container, onLoginSuccess);
+}
+
+export function renderAuthPortal(container: HTMLElement, onLoginSuccess: () => void) {
   container.innerHTML = `
-    <div class="modal-backdrop active" id="smartLoginBackdrop" style="background: rgba(0, 0, 0, 0.55);">
-      <div class="modal-sheet" style="max-width: 420px; padding: 2rem 1.75rem;">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-          <div style="width: 54px; height: 54px; margin: 0 auto 0.75rem auto; display: flex; align-items: center; justify-content: center;">
-            <img src="/logo.png" alt="Logo SD Inpres Lonrong" style="width: 100%; height: 100%; object-fit: contain;" />
+    <div class="auth-portal-wrapper">
+      <div class="auth-card">
+        <!-- School Branding Header -->
+        <div class="auth-header">
+          <div class="auth-school-badge">
+            <img src="/logo.png" alt="Logo SD Inpres Lonrong" />
           </div>
-          <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--apple-text-primary);">Smart Login</h2>
-          <p style="font-size: 0.8rem; color: var(--apple-text-secondary); margin-top: 0.2rem;">
-            Sistem Informasi Administrasi SD Inpres Lonrong
+          <h2 class="auth-title">SD INPRES LONRONG</h2>
+          <p class="auth-subtitle">
+            Sistem Informasi Manajemen Administrasi Sekolah Terpadu (NPSN: 40304087)
           </p>
         </div>
 
-        <!-- Mode Segmented Control -->
+        <!-- Mode Segmented Control: Credentials vs Quick PIN -->
         <div class="apple-segmented-control" id="loginTypeControl" style="width: 100%; margin-bottom: 1.25rem; display: flex;">
-          <button class="segment-btn active" data-tab="credentials" style="flex: 1;">Kredensial</button>
+          <button class="segment-btn active" data-tab="credentials" style="flex: 1;">Kredensial Akun</button>
           <button class="segment-btn" data-tab="pin" style="flex: 1;">PIN Cepat</button>
-          <button class="segment-btn" data-tab="quick" style="flex: 1;">Pilih Peran</button>
         </div>
 
-        <div id="loginAlertBox" style="display: none; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 1rem;"></div>
+        <!-- Alert Notification Box -->
+        <div id="loginAlertBox" style="display: none; padding: 0.75rem 0.95rem; border-radius: var(--radius-sm); font-size: 0.82rem; margin-bottom: 1.15rem; line-height: 1.45;"></div>
 
-        <!-- Tab 1: Username & Password Form -->
-        <form id="formLoginCredentials">
-          <div class="apple-input-group">
-            <label class="apple-label">Nama Pengguna</label>
-            <input type="text" class="apple-input" name="username" required value="admin" placeholder="admin / tendik / guru" />
+        <!-- Form 1: Username & Password (Kredensial Resmi) -->
+        <form id="formLoginCredentials" autocomplete="off">
+          <div class="apple-input-group" style="margin-bottom: 1rem;">
+            <label class="apple-label" for="loginUsername">NIP / Nama Pengguna</label>
+            <input 
+              type="text" 
+              id="loginUsername"
+              name="username_official" 
+              class="apple-input" 
+              placeholder="Masukkan NIP atau nama pengguna" 
+              autocomplete="off" 
+              value=""
+              required 
+              autofocus
+            />
           </div>
 
-          <div class="apple-input-group">
-            <label class="apple-label">Kata Sandi</label>
-            <input type="password" class="apple-input" name="password" required value="admin123" placeholder="Masukkan kata sandi" />
+          <div class="apple-input-group" style="margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="apple-label" for="loginPassword" style="margin: 0;">Kata Sandi</label>
+              <button type="button" id="btnTogglePassword" class="apple-btn apple-btn-ghost" style="padding: 0.15rem 0.4rem; font-size: 0.74rem; color: var(--apple-text-secondary);">
+                Lihat Sandi
+              </button>
+            </div>
+            <input 
+              type="password" 
+              id="loginPassword"
+              name="password_official" 
+              class="apple-input" 
+              placeholder="Masukkan kata sandi akun" 
+              autocomplete="new-password" 
+              value=""
+              required 
+            />
           </div>
 
-          <button type="submit" class="apple-btn apple-btn-primary" style="width: 100%; padding: 0.7rem; margin-top: 0.5rem; font-size: 0.88rem;">
-            Masuk
+          <button type="submit" id="btnLoginSubmit" class="apple-btn apple-btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.92rem; font-weight: 600; justify-content: center;">
+            Masuk ke Sistem
           </button>
         </form>
 
-        <!-- Tab 2: Quick PIN Form -->
+        <!-- Form 2: Quick PIN (Untuk Guru / Operator di Perangkat Bersama) -->
         <form id="formLoginPin" style="display: none; text-align: center;">
           <div style="font-size: 0.82rem; color: var(--apple-text-secondary); margin-bottom: 1rem;">
-            Masukkan 4 digit PIN Cepat pengguna:
+            Masukkan 4 digit PIN Cepat Anda:
           </div>
           <div style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1rem;">
-            <input type="password" maxlength="4" id="inputPinCode" class="apple-input" style="font-size: 1.6rem; letter-spacing: 0.4em; text-align: center; width: 170px; font-weight: 700;" placeholder="••••" />
+            <input 
+              type="password" 
+              maxlength="4" 
+              id="inputPinCode" 
+              class="apple-input" 
+              style="font-size: 1.75rem; letter-spacing: 0.45em; text-align: center; width: 180px; font-weight: 700; height: 50px;" 
+              placeholder="••••" 
+              inputmode="numeric"
+            />
           </div>
-          <div style="font-size: 0.73rem; color: var(--apple-text-tertiary); margin-bottom: 1.25rem;">
-            Default PIN: Admin (1234) • Tendik (2345) • Guru (3456)
-          </div>
-          <button type="submit" class="apple-btn apple-btn-primary" style="width: 100%; padding: 0.7rem; font-size: 0.88rem;">
-            Verifikasi PIN
+          <p style="font-size: 0.74rem; color: var(--apple-text-tertiary); margin-bottom: 1.25rem;">
+            PIN 4-digit khusus untuk akses harian guru di sekolah.
+          </p>
+          <button type="submit" id="btnPinSubmit" class="apple-btn apple-btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.92rem; font-weight: 600; justify-content: center;">
+            Verifikasi & Masuk
           </button>
         </form>
 
-        <!-- Tab 3: Quick Role Selector (Instant Demo) -->
-        <div id="quickRoleSelector" style="display: none; flex-direction: column; gap: 0.65rem;">
-          <div style="font-size: 0.78rem; color: var(--apple-text-secondary); margin-bottom: 0.25rem;">
-            Pilih hak akses untuk masuk langsung:
-          </div>
-          
-          <button class="apple-btn apple-btn-secondary btn-quick-role" data-role="admin" style="justify-content: flex-start; padding: 0.75rem 0.85rem; border-radius: var(--radius-sm);">
-            <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--apple-blue-light); color: var(--apple-blue); display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; flex-shrink: 0;">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            </div>
-            <div style="text-align: left;">
-              <div style="font-weight: 700; font-size: 0.84rem; color: var(--apple-text-primary);">Super Admin / Kepala Sekolah</div>
-              <div style="font-size: 0.72rem; color: var(--apple-text-tertiary);">Drs. H. Syamsuddin, M.Pd. (Akses Penuh)</div>
-            </div>
-          </button>
-
-          <button class="apple-btn apple-btn-secondary btn-quick-role" data-role="tendik" style="justify-content: flex-start; padding: 0.75rem 0.85rem; border-radius: var(--radius-sm);">
-            <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--apple-green-light); color: var(--apple-green); display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; flex-shrink: 0;">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            </div>
-            <div style="text-align: left;">
-              <div style="font-weight: 700; font-size: 0.84rem; color: var(--apple-text-primary);">Tenaga Kependidikan / Operator TU</div>
-              <div style="font-size: 0.72rem; color: var(--apple-text-tertiary);">Andi Nurul Qalbi, S.Kom. (Siswa & Sarpras)</div>
-            </div>
-          </button>
-
-          <button class="apple-btn apple-btn-secondary btn-quick-role" data-role="guru" style="justify-content: flex-start; padding: 0.75rem 0.85rem; border-radius: var(--radius-sm);">
-            <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--apple-orange-light); color: var(--apple-orange); display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; flex-shrink: 0;">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            </div>
-            <div style="text-align: left;">
-              <div style="font-weight: 700; font-size: 0.84rem; color: var(--apple-text-primary);">Guru Kelas & Mata Pelajaran</div>
-              <div style="font-size: 0.72rem; color: var(--apple-text-tertiary);">Sitti Rahmah, S.Pd. (Jurnal & Beban Ajar)</div>
-            </div>
-          </button>
+        <!-- Informative Official Footer -->
+        <div class="auth-footer-note">
+          <span>Keamanan Terlindungi • Local-First Offline & Enkripsi Kriptografis</span>
         </div>
       </div>
     </div>
   `;
 
   // Tab switching
-  const formCred = container.querySelector('#formLoginCredentials') as HTMLElement;
-  const formPin = container.querySelector('#formLoginPin') as HTMLElement;
-  const quickSelector = container.querySelector('#quickRoleSelector') as HTMLElement;
+  const formCred = container.querySelector('#formLoginCredentials') as HTMLFormElement;
+  const formPin = container.querySelector('#formLoginPin') as HTMLFormElement;
   const alertBox = container.querySelector('#loginAlertBox') as HTMLElement;
+  const btnToggle = container.querySelector('#btnTogglePassword') as HTMLButtonElement;
+  const inputPassword = container.querySelector('#loginPassword') as HTMLInputElement;
+
+  if (btnToggle && inputPassword) {
+    btnToggle.addEventListener('click', () => {
+      const isPassword = inputPassword.type === 'password';
+      inputPassword.type = isPassword ? 'text' : 'password';
+      btnToggle.textContent = isPassword ? 'Sembunyikan' : 'Lihat Sandi';
+    });
+  }
 
   container.querySelectorAll('#loginTypeControl .segment-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -108,52 +122,74 @@ export function renderLoginModal(container: HTMLElement, onLoginSuccess: () => v
       (e.currentTarget as HTMLElement).classList.add('active');
       const tab = (e.currentTarget as HTMLElement).dataset.tab;
 
-      formCred.style.display = tab === 'credentials' ? 'block' : 'none';
-      formPin.style.display = tab === 'pin' ? 'block' : 'none';
-      quickSelector.style.display = tab === 'quick' ? 'flex' : 'none';
-      alertBox.style.display = 'none';
+      if (formCred) formCred.style.display = tab === 'credentials' ? 'block' : 'none';
+      if (formPin) formPin.style.display = tab === 'pin' ? 'block' : 'none';
+      if (alertBox) alertBox.style.display = 'none';
+
+      if (tab === 'pin') {
+        const pinInput = container.querySelector('#inputPinCode') as HTMLInputElement;
+        if (pinInput) setTimeout(() => pinInput.focus(), 50);
+      } else {
+        const userInput = container.querySelector('#loginUsername') as HTMLInputElement;
+        if (userInput) setTimeout(() => userInput.focus(), 50);
+      }
     });
   });
 
   // Handle Credentials Submit
   formCred?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = new FormData(formCred as HTMLFormElement);
-    const u = formData.get('username') as string;
-    const p = formData.get('password') as string;
+    const btnSubmit = formCred.querySelector('#btnLoginSubmit') as HTMLButtonElement;
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Memverifikasi...';
+    }
+
+    const formData = new FormData(formCred);
+    const u = ((formData.get('username_official') || formData.get('username') || '') as string).trim();
+    const p = ((formData.get('password_official') || formData.get('password') || '') as string).trim();
 
     const res = await authService.loginWithCredentials(u, p);
     if (res.success) {
       onLoginSuccess();
     } else {
-      alertBox.style.display = 'block';
-      alertBox.style.background = 'var(--apple-red-light)';
-      alertBox.style.color = 'var(--apple-red)';
-      alertBox.textContent = res.message;
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Masuk ke Sistem';
+      }
+      if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--apple-red-light)';
+        alertBox.style.color = 'var(--apple-red)';
+        alertBox.textContent = res.message;
+      }
     }
   });
 
   // Handle PIN Submit
   formPin?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const pin = (container.querySelector('#inputPinCode') as HTMLInputElement).value;
+    const btnSubmit = formPin.querySelector('#btnPinSubmit') as HTMLButtonElement;
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Memverifikasi...';
+    }
+
+    const pin = ((container.querySelector('#inputPinCode') as HTMLInputElement)?.value || '').trim();
     const res = await authService.loginWithPin(pin);
     if (res.success) {
       onLoginSuccess();
     } else {
-      alertBox.style.display = 'block';
-      alertBox.style.background = 'var(--apple-red-light)';
-      alertBox.style.color = 'var(--apple-red)';
-      alertBox.textContent = res.message;
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Verifikasi & Masuk';
+      }
+      if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--apple-red-light)';
+        alertBox.style.color = 'var(--apple-red)';
+        alertBox.textContent = res.message;
+      }
     }
-  });
-
-  // Handle Quick Role Buttons
-  container.querySelectorAll('.btn-quick-role').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
-      const role = (e.currentTarget as HTMLElement).dataset.role as 'admin' | 'tendik' | 'guru';
-      await authService.switchRoleQuick(role);
-      onLoginSuccess();
-    });
   });
 }

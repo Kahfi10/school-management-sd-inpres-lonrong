@@ -41,28 +41,64 @@ function updateCurrentDateDisplay() {
   dateEl.textContent = now.toLocaleDateString('id-ID', options);
 }
 
+function updateSplashProgress(percent: number, status: string) {
+  const bar = document.getElementById('splashProgressIndicator');
+  const text = document.getElementById('splashStatusText');
+  if (bar) bar.style.width = `${percent}%`;
+  if (text) text.textContent = status;
+}
+
 async function initApp() {
   console.log('[Lonrong SmartEdu] Starting up application...');
 
-  // 1. Initialize IndexedDB seed data
-  await initializeDatabaseSeed();
+  try {
+    // 1. Splash Step 1: Preload and initialize IndexedDB seed data
+    updateSplashProgress(25, 'Menyiapkan basis data lokal sekolah...');
+    await initializeDatabaseSeed();
 
-  // 2. Setup Sync Telemetry Observer
-  setupSyncTelemetry();
+    // 2. Splash Step 2: Setup Sync Telemetry & System Utilities
+    updateSplashProgress(55, 'Menghubungkan sinkronisasi & sistem...');
+    setupSyncTelemetry();
+    setupTheme();
+    updateCurrentDateDisplay();
 
-  // 3. Setup Theme Switcher
-  setupTheme();
+    // 3. Splash Step 3: Verify security & restore active user session
+    updateSplashProgress(80, 'Memeriksa otentikasi & keamanan...');
+    const initialUser = await authService.init();
 
-  // 4. Update Header Date
-  updateCurrentDateDisplay();
+    // 4. Splash Step 4: Completion and smooth transition
+    updateSplashProgress(100, 'Memuat antarmuka...');
+    await new Promise((r) => setTimeout(r, 650));
 
-  // 5. Setup Authentication and Routing
-  authService.subscribe((user) => {
-    updateUserInterface(user);
-  });
+    // Smoothly fade out splash screen
+    const splash = document.getElementById('appSplashLanding');
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(() => splash.remove(), 420);
+    }
+
+    // 5. Route to either Auth Portal (if unauthenticated) or Protected Dashboard
+    updateUserInterface(initialUser);
+
+    // 6. Subscribe to auth changes (e.g. login, logout)
+    authService.subscribe((user) => {
+      updateUserInterface(user);
+    });
+  } catch (err) {
+    console.error('[Lonrong SmartEdu] Startup error:', err);
+    updateSplashProgress(100, 'Sistem siap.');
+    const splash = document.getElementById('appSplashLanding');
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(() => splash.remove(), 420);
+    }
+    updateUserInterface(authService.getCurrentUser());
+  }
 }
 
 function updateUserInterface(user: UserAccount | null) {
+  const appContainer = document.getElementById('app') as HTMLElement;
+  const authPortal = document.getElementById('authPortal') as HTMLElement;
   const modalRoot = document.getElementById('modalRoot') as HTMLElement;
   const userNameEl = document.getElementById('sidebarUserName') as HTMLElement;
   const userRoleEl = document.getElementById('sidebarUserRole') as HTMLElement;
@@ -70,16 +106,27 @@ function updateUserInterface(user: UserAccount | null) {
   const btnAdminSettings = document.getElementById('btnAdminSettings') as HTMLElement;
 
   if (!user) {
-    // Show Smart Login
-    renderLoginModal(modalRoot, () => {
-      modalRoot.innerHTML = '';
-      updateUserInterface(authService.getCurrentUser());
-    });
+    // Sembunyikan TOTAL seluruh aplikasi utama agar tidak ada kebocoran data (Zero Flash)
+    if (appContainer) appContainer.style.display = 'none';
+    if (modalRoot) modalRoot.innerHTML = '';
+
+    // Tampilkan Gerbang Login Resmi Layar Penuh
+    if (authPortal) {
+      authPortal.style.display = 'flex';
+      renderLoginModal(authPortal, () => {
+        updateUserInterface(authService.getCurrentUser());
+      });
+    }
     return;
   }
 
-  // Clear login modal
-  modalRoot.innerHTML = '';
+  // Pengguna Terotentikasi: Sembunyikan Gerbang Login & Tampilkan Aplikasi Utama
+  if (authPortal) {
+    authPortal.style.display = 'none';
+    authPortal.innerHTML = '';
+  }
+  if (modalRoot) modalRoot.innerHTML = '';
+  if (appContainer) appContainer.style.display = 'flex';
 
   // Update Sidebar user info
   if (userNameEl) userNameEl.textContent = user.namaLengkap;
@@ -317,11 +364,37 @@ document.addEventListener('DOMContentLoaded', () => {
   initApp();
   initPwaServiceWorker();
 
-  // Navigation clicks with Route Protection
+  // Mobile Sidebar Toggle and Backdrop Handlers
+  const btnToggleMobile = document.getElementById('btnMobileMenuToggle');
+  const appSidebar = document.getElementById('appSidebar');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+  const toggleSidebar = (force?: boolean) => {
+    if (!appSidebar) return;
+    const shouldOpen = force !== undefined ? force : !appSidebar.classList.contains('open');
+    if (shouldOpen) {
+      appSidebar.classList.add('open');
+      sidebarBackdrop?.classList.add('active');
+    } else {
+      appSidebar.classList.remove('open');
+      sidebarBackdrop?.classList.remove('active');
+    }
+  };
+
+  btnToggleMobile?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSidebar();
+  });
+  sidebarBackdrop?.addEventListener('click', () => toggleSidebar(false));
+
+  // Navigation clicks with Route Protection & Mobile auto-close
   document.querySelectorAll('#sidebarNav .nav-item').forEach((item) => {
     item.addEventListener('click', (e) => {
       const navKey = (e.currentTarget as HTMLElement).dataset.nav;
       if (navKey) navigateTo(navKey);
+      if (window.innerWidth <= 900) {
+        toggleSidebar(false);
+      }
     });
   });
 

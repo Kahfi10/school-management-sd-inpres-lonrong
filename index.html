@@ -28,7 +28,31 @@
     <link rel="stylesheet" href="/src/styles/apple_design.css" />
   </head>
   <body>
-    <div id="app" class="app-container">
+    <!-- Apple-grade Animated Splash Landing & Data Preloader -->
+    <div id="appSplashLanding" class="splash-landing-overlay">
+      <div class="splash-landing-content">
+        <div class="splash-logo-container">
+          <img src="/logo.png" alt="Logo SD Inpres Lonrong" class="splash-logo" />
+        </div>
+        <h1 class="splash-title">SD INPRES LONRONG</h1>
+        <p class="splash-meta">Sistem Informasi Manajemen Administrasi Sekolah Terpadu</p>
+        <span class="splash-npsn">NPSN 40304087 • Kurikulum Merdeka • Bantaeng</span>
+
+        <div class="splash-loader-bar-bg">
+          <div id="splashProgressIndicator" class="splash-loader-bar-fill"></div>
+        </div>
+        <div id="splashStatusText" class="splash-status-text">Menyiapkan sistem sekolah...</div>
+      </div>
+    </div>
+
+    <!-- Dedicated Fullscreen Auth Portal Gate (Zero Flash of Dashboard) -->
+    <div id="authPortal" style="display: none;"></div>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <!-- Main Protected Application Container -->
+    <div id="app" class="app-container" style="display: none;">
       <!-- Apple HIG Sidebar -->
       <aside class="apple-sidebar" id="appSidebar">
         <!-- Sidebar Brand Header -->
@@ -125,6 +149,10 @@
         <!-- Top Navigation Bar (Sederhana, Bersih & Ramah Guru) -->
         <header class="top-navbar">
           <div class="navbar-left">
+            <!-- Mobile Menu Toggle Button -->
+            <button class="apple-btn apple-btn-ghost mobile-menu-toggle" id="btnMobileMenuToggle" aria-label="Buka Menu Navigasi">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
             <div class="page-title-group">
               <h1 id="topNavTitle">Dashboard Informasi Sekolah</h1>
               <span id="currentDateDisplay" class="header-date-badge"></span>
