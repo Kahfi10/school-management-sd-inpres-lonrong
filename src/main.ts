@@ -13,6 +13,7 @@ import { openSecurityCenterModal } from './modules/security/security_view';
 import { openCloudSyncModal } from './modules/sync/cloud_sync_modal';
 import { openAdminSettingsModal } from './modules/settings/settings_modal';
 import { renderPageSkeleton } from './utils/skeleton_loader';
+import { showAlert, showConfirmDialog } from './utils/apple_alerts';
 import type { UserAccount } from './db/local_db';
 
 let currentNav = 'dashboard';
@@ -142,10 +143,20 @@ function navigateTo(navKey: string) {
     return;
   }
 
-  // 1. Render tailored Apple HIG Skeleton immediately for smooth transition
+  // 1. Silky Smooth Top Progress Bar Animation
+  const progressBar = document.getElementById('pageTopProgressBar');
+  if (progressBar) {
+    progressBar.classList.add('active');
+    progressBar.style.width = '15%';
+    setTimeout(() => {
+      if (progressBar && currentNav === navKey) progressBar.style.width = '70%';
+    }, 40);
+  }
+
+  // 2. Render tailored Apple HIG Skeleton immediately for smooth transition
   renderPageSkeleton(viewContent, navKey);
 
-  // 2. Render actual view with smooth fade-in
+  // 3. Render actual view with smooth fade-in after a comfortable transition duration
   const targetNav = navKey;
   setTimeout(async () => {
     if (currentNav !== targetNav) return;
@@ -176,12 +187,23 @@ function navigateTo(navKey: string) {
         await renderDashboardView(viewContent);
     }
 
+    // Complete Progress Bar smoothly
+    if (progressBar) {
+      progressBar.style.width = '100%';
+      setTimeout(() => {
+        progressBar.classList.remove('active');
+        setTimeout(() => {
+          if (progressBar) progressBar.style.width = '0%';
+        }, 220);
+      }, 160);
+    }
+
     // Apply view fade-in animation
     const container = viewContent.querySelector('.page-container') || viewContent.firstElementChild;
     if (container) {
       container.classList.add('view-fade-in');
     }
-  }, 90);
+  }, 160);
 }
 
 function setupSyncTelemetry() {
@@ -211,6 +233,7 @@ function setupSyncTelemetry() {
     if (viewContent) {
       navigateTo(currentNav);
     }
+    showAlert({ title: 'Data Diperbarui', message: 'Tampilan data sekolah telah berhasil disegarkan.', type: 'info', duration: 4000 });
     setTimeout(() => {
       if (text) text.textContent = 'Data Tersimpan Otomatis';
     }, 500);
@@ -307,9 +330,16 @@ document.addEventListener('DOMContentLoaded', () => {
     openAdminSettingsModal();
   });
 
-  // Logout button
-  document.getElementById('btnLogout')?.addEventListener('click', () => {
-    if (confirm('Keluar dari sesi akun sekolah?')) {
+  // Logout button with elegant Apple confirmation dialog
+  document.getElementById('btnLogout')?.addEventListener('click', async () => {
+    const confirmed = await showConfirmDialog({
+      title: 'Keluar dari Akun',
+      message: 'Apakah Anda yakin ingin mengakhiri sesi dan keluar dari sistem manajemen sekolah SD Inpres Lonrong?',
+      confirmText: 'Keluar',
+      cancelText: 'Tetap Masuk',
+      type: 'danger',
+    });
+    if (confirmed) {
       authService.logout();
     }
   });

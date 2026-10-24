@@ -1,5 +1,6 @@
 import { db, type PegawaiRecord, type BebanAjarRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
+import { showAlert, showConfirmDialog } from '../../utils/apple_alerts';
 
 export async function renderKepegawaianView(container: HTMLElement) {
   async function loadData() {
@@ -416,9 +417,17 @@ export async function renderKepegawaianView(container: HTMLElement) {
     container.querySelectorAll('.btn-delete-pegawai').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         const id = (e.currentTarget as HTMLElement).dataset.id;
-        if (id && confirm('Yakin ingin menghapus data pegawai ini?')) {
+        if (!id) return;
+        const confirmed = await showConfirmDialog({
+          title: 'Hapus Data Pegawai',
+          message: 'Data pendidik/tendik ini akan dihapus dari sistem. Lanjutkan tindakan ini?',
+          confirmText: 'Hapus Pegawai',
+          type: 'danger',
+        });
+        if (confirmed) {
           await db.pegawai.delete(id);
           await syncEngine.queueMutation('pegawai', id, 'delete', { id });
+          showAlert({ title: 'Data Dihapus', message: 'Data pegawai telah berhasil dihapus.', type: 'info' });
           renderContent();
         }
       });

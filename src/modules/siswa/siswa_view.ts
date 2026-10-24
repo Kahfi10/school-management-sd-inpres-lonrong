@@ -4,6 +4,7 @@ import { SD_LONRONG_PROFILE } from '../../config/school_profile';
 import { exportDataToExcel, exportDocToPdf, applyAutoTable } from '../../utils/export_helper';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
+import { showAlert, showConfirmDialog } from '../../utils/apple_alerts';
 
 export async function renderSiswaView(container: HTMLElement) {
   let currentFilter = 'aktif';
@@ -124,9 +125,17 @@ export async function renderSiswaView(container: HTMLElement) {
     container.querySelectorAll('.btn-action-delete').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         const id = (e.currentTarget as HTMLElement).dataset.id;
-        if (id && confirm('Yakin ingin menghapus data siswa ini?')) {
+        if (!id) return;
+        const confirmed = await showConfirmDialog({
+          title: 'Hapus Data Siswa',
+          message: 'Data siswa ini akan dihapus dari buku induk sekolah secara permanen. Lanjutkan tindakan ini?',
+          confirmText: 'Hapus Siswa',
+          type: 'danger',
+        });
+        if (confirmed) {
           await db.siswa.delete(id);
           await syncEngine.queueMutation('siswa', id, 'delete', { id });
+          showAlert({ title: 'Data Dihapus', message: 'Data siswa telah berhasil dihapus dari sistem.', type: 'info' });
           renderTable();
         }
       });
@@ -470,7 +479,11 @@ export async function renderSiswaView(container: HTMLElement) {
 
     const existing = await db.siswa.where('nisn').equals(nisn).first();
     if (existing) {
-      alert(`Siswa dengan NISN ${nisn} sudah terdaftar (${existing.namaLengkap}).`);
+      showAlert({
+        title: 'NISN Sudah Terdaftar',
+        message: `Siswa dengan NISN ${nisn} sudah terdaftar atas nama ${existing.namaLengkap} (Kelas ${existing.tingkatKelas}).`,
+        type: 'warning',
+      });
       return;
     }
 
@@ -641,7 +654,11 @@ export async function renderSiswaView(container: HTMLElement) {
       }
     }
 
-    alert(`Import Berhasil: ${addedCount} data siswa baru telah ditambahkan.`);
+    showAlert({
+      title: 'Import Selesai',
+      message: `Berhasil menambahkan ${addedCount} data peserta didik baru dari berkas.`,
+      type: 'success',
+    });
     modalImport.classList.remove('active');
     renderTable();
   });

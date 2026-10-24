@@ -10,6 +10,7 @@ import {
 } from '../../utils/security';
 import { downloadBlob } from '../../utils/export_helper';
 import { authService } from '../auth/auth_service';
+import { showAlert, showConfirmDialog } from '../../utils/apple_alerts';
 
 export function openSecurityCenterModal() {
   const existing = document.getElementById('securityCenterModal');
@@ -379,7 +380,7 @@ export function openSecurityCenterModal() {
         status: 'SUCCESS',
         details: 'Ekspor berkas backup JSON terenkripsi tanda tangan SHA-256',
       });
-      alert('Berkas cadangan database SD Inpres Lonrong berhasil diunduh!');
+      showAlert({ title: 'Cadangan Disimpan', message: 'Berkas cadangan basis data sekolah berhasil disimpan.', type: 'success' });
     });
 
     // Restore Database
@@ -392,7 +393,13 @@ export function openSecurityCenterModal() {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
-      if (!confirm('PERINGATAN: Memulihkan database akan menimpa data yang ada saat ini dengan data dari berkas cadangan. Lanjutkan?')) {
+      const confirmed = await showConfirmDialog({
+        title: 'Pulihkan Database',
+        message: 'Peringatan: Memulihkan database akan menimpa data yang ada saat ini dengan data dari berkas cadangan. Lanjutkan?',
+        confirmText: 'Timpa & Pulihkan',
+        type: 'danger',
+      });
+      if (!confirmed) {
         fileInput.value = '';
         return;
       }
@@ -402,19 +409,26 @@ export function openSecurityCenterModal() {
         const jsonContent = evt.target?.result as string;
         const res = await restoreDatabaseBackup(jsonContent);
         if (res.success) {
-          alert(res.message);
-          window.location.reload();
+          showAlert({ title: 'Pemulihan Berhasil', message: res.message, type: 'success' });
+          setTimeout(() => window.location.reload(), 1200);
         } else {
-          alert('GAGAL: ' + res.message);
+          showAlert({ title: 'Pemulihan Gagal', message: res.message, type: 'error' });
         }
       };
       reader.readAsText(file);
     });
 
     // Clear Logs
-    modal.querySelector('#btnClearAuditLogs')?.addEventListener('click', () => {
-      if (confirm('Bersihkan riwayat log audit keamanan lokal?')) {
+    modal.querySelector('#btnClearAuditLogs')?.addEventListener('click', async () => {
+      const confirmed = await showConfirmDialog({
+        title: 'Bersihkan Log Audit',
+        message: 'Riwayat log audit keamanan lokal akan dibersihkan. Lanjutkan tindakan ini?',
+        confirmText: 'Bersihkan Log',
+        type: 'danger',
+      });
+      if (confirmed) {
         localStorage.removeItem('sd_lonrong_audit_logs');
+        showAlert({ title: 'Log Dibersihkan', message: 'Riwayat audit keamanan telah dikosongkan.', type: 'info' });
         renderModalContent();
       }
     });

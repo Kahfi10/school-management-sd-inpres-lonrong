@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { sanitizeFilename } from './security';
+import { showAlert } from './apple_alerts';
 
 /**
  * Universal safe caller for jspdf-autotable across ESM/CJS bundlers
@@ -199,7 +200,7 @@ export function exportDataToExcel(
     return { success: true, url };
   } catch (err) {
     console.error('Failed to export Excel file:', err);
-    alert(`Gagal mengekspor file Excel: ${(err as Error).message}`);
+    showAlert({ title: 'Gagal Ekspor Excel', message: (err as Error).message, type: 'error' });
     return { success: false, url: '' };
   }
 }
@@ -243,7 +244,7 @@ export function exportDocToPdf(
     return { success: true, url: downloadUrl };
   } catch (err) {
     console.error('Failed to export PDF file:', err);
-    alert(`Gagal mengekspor dokumen PDF: ${(err as Error).message}`);
+    showAlert({ title: 'Gagal Ekspor Dokumen PDF', message: (err as Error).message, type: 'error' });
     return { success: false, url: '' };
   }
 }

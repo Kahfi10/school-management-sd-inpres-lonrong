@@ -1,6 +1,7 @@
 import { db, type SarprasRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
 import { SD_LONRONG_PROFILE } from '../../config/school_profile';
+import { showAlert, showConfirmDialog } from '../../utils/apple_alerts';
 
 export async function renderSarprasView(container: HTMLElement) {
   let selectedKib = 'all';
@@ -112,9 +113,17 @@ export async function renderSarprasView(container: HTMLElement) {
     container.querySelectorAll('.btn-delete-sarpras').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         const id = (e.currentTarget as HTMLElement).dataset.id;
-        if (id && confirm('Yakin ingin menghapus data aset sarpras ini?')) {
+        if (!id) return;
+        const confirmed = await showConfirmDialog({
+          title: 'Hapus Aset Inventaris',
+          message: 'Data aset KIB ini akan dihapus dari buku inventaris sekolah. Lanjutkan tindakan ini?',
+          confirmText: 'Hapus Aset',
+          type: 'danger',
+        });
+        if (confirmed) {
           await db.sarpras.delete(id);
           await syncEngine.queueMutation('sarpras', id, 'delete', { id });
+          showAlert({ title: 'Aset Dihapus', message: 'Data aset sarpras berhasil dihapus.', type: 'info' });
           renderTable();
         }
       });

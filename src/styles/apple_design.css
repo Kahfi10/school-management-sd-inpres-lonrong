@@ -103,13 +103,13 @@
 }
 
 .view-fade-in {
-  animation: appleViewFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: appleViewFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes appleViewFadeIn {
   from {
-    opacity: 0.85;
-    transform: translateY(2px);
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -119,10 +119,12 @@
 
 @keyframes appleSkeletonEnter {
   from {
-    opacity: 0.7;
+    opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -1090,3 +1092,147 @@ p {
     transform: translateY(0) scale(1);
   }
 }
+
+/* ==========================================================================
+   PAGE LOADING TOP PROGRESS BAR
+   ========================================================================== */
+#pageTopProgressBar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  height: 2.5px;
+  background: #1D4ED8;
+  width: 0%;
+  z-index: 50;
+  opacity: 0;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  box-shadow: 0 1px 4px rgba(29, 78, 216, 0.4);
+  pointer-events: none;
+}
+
+#pageTopProgressBar.active {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   ELEGANT APPLE FLOATING TOAST NOTIFICATIONS
+   ========================================================================== */
+.apple-toast-container {
+  position: fixed;
+  top: 4.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  pointer-events: none;
+  width: 90%;
+  max-width: 440px;
+}
+
+.apple-toast {
+  pointer-events: auto;
+  width: 100%;
+  background: #0F172A;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.05rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  animation: appleToastSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.apple-toast.dismissing {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.96);
+}
+
+@keyframes appleToastSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.toast-icon-success { background: #047857; }
+.toast-icon-error { background: #BE123C; }
+.toast-icon-warning { background: #B45309; }
+.toast-icon-info { background: #1D4ED8; }
+
+.toast-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.25;
+}
+
+.toast-message {
+  font-size: 0.8rem;
+  color: #CBD5E1;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #94A3B8;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--duration-fast), background-color var(--duration-fast);
+}
+
+.toast-close-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Confirmation Sheet Icons */
+.confirm-icon-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+}
+
+.confirm-icon-danger { background: #BE123C; }
+.confirm-icon-info { background: #1D4ED8; }
+.confirm-icon-warning { background: #B45309; }
+

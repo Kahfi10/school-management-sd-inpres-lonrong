@@ -1,6 +1,7 @@
 // Cloud Sync Configuration Modal (Apple HIG Style)
 import { cloudSyncService, type CloudSyncConfig } from '../../db/cloud_sync_service';
 import { syncEngine } from '../../db/sync_engine';
+import { showConfirmDialog } from '../../utils/apple_alerts';
 
 export function openCloudSyncModal() {
   const modalRoot = document.getElementById('modalRoot');
@@ -313,9 +314,13 @@ export function openCloudSyncModal() {
     reader.onload = async (event) => {
       try {
         const text = event.target?.result as string;
-        if (!confirm('PERINGATAN: Memulihkan cadangan akan menimpa data lokal dengan isi berkas ini. Lanjutkan?')) {
-          return;
-        }
+        const ok = await showConfirmDialog({
+          title: 'Pulihkan Cadangan Data',
+          message: 'Peringatan: Memulihkan cadangan akan menimpa data lokal saat ini dengan isi berkas cadangan. Lanjutkan proses ini?',
+          confirmText: 'Timpa & Pulihkan',
+          type: 'danger',
+        });
+        if (!ok) return;
         showAlert('Memulihkan data dari berkas cadangan...', 'info');
         const res = await cloudSyncService.restoreFullBackup(text);
         showAlert(`Pemulihan berhasil! ${res.restoredCount} catatan berhasil dipulihkan. Halaman akan diperbarui.`, 'success');

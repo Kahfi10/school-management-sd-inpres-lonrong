@@ -1,5 +1,6 @@
 import { db, type ArsipDigitalRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
+import { showAlert, showConfirmDialog } from '../../utils/apple_alerts';
 
 export async function renderEfilingView(container: HTMLElement) {
   let selectedCategory = 'all';
@@ -318,9 +319,17 @@ export async function renderEfilingView(container: HTMLElement) {
     container.querySelectorAll('.btn-delete-arsip').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         const id = (e.currentTarget as HTMLElement).dataset.id;
-        if (id && confirm('Hapus arsip digital ini dari basis data dan Google Drive?')) {
+        if (!id) return;
+        const confirmed = await showConfirmDialog({
+          title: 'Hapus Berkas Arsip',
+          message: 'Berkas arsip digital ini akan dihapus dari sistem. Lanjutkan tindakan ini?',
+          confirmText: 'Hapus Berkas',
+          type: 'danger',
+        });
+        if (confirmed) {
           await db.arsipDigital.delete(id);
           await syncEngine.queueMutation('arsipDigital', id, 'delete', { id });
+          showAlert({ title: 'Arsip Dihapus', message: 'Berkas arsip berhasil dihapus.', type: 'info' });
           renderContent();
         }
       });
