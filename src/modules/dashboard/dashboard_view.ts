@@ -78,13 +78,27 @@ export async function renderDashboardView(container: HTMLElement) {
       <!-- School Hero Banner (Solid Apple HIG Container - Zero Gradient) -->
       <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); padding: 1.5rem 1.85rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; box-shadow: var(--apple-shadow-xs);">
         <div style="display: flex; align-items: center; gap: 1.35rem;">
-          <img src="/logo.png" alt="Logo SD Inpres Lonrong" style="width: 64px; height: 64px; object-fit: contain; flex-shrink: 0;" />
+          <div style="width: 72px; height: 72px; border-radius: var(--radius-md); background: #FFFFFF; border: 1px solid var(--apple-border-subtle); display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); flex-shrink: 0;">
+            <img src="/logo.png" alt="Logo SD Inpres Lonrong" style="width: 100%; height: 100%; object-fit: contain;" />
+          </div>
           <div>
-            <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
-              <span class="status-pill neutral">NPSN ${SD_LONRONG_PROFILE.npsn}</span>
-              <span class="status-pill success">Akreditasi ${SD_LONRONG_PROFILE.akreditasi} (Nilai: 91)</span>
-              <span class="status-pill info">${SD_LONRONG_PROFILE.kurikulum}</span>
-              <span class="status-pill neutral">Dapodik Terverifikasi</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.45rem; flex-wrap: wrap;">
+              <span class="solid-badge solid-badge-dark">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                NPSN ${SD_LONRONG_PROFILE.npsn}
+              </span>
+              <span class="solid-badge solid-badge-emerald">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Akreditasi ${SD_LONRONG_PROFILE.akreditasi} (Unggul • Nilai 91)
+              </span>
+              <span class="solid-badge solid-badge-blue">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                ${SD_LONRONG_PROFILE.kurikulum}
+              </span>
+              <span class="solid-badge solid-badge-slate">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+                Dapodik Terverifikasi
+              </span>
             </div>
             <h1 style="font-size: 1.65rem; font-weight: 700; color: var(--apple-text-primary); letter-spacing: -0.015em; line-height: 1.25;">
               ${SD_LONRONG_PROFILE.namaSekolah}
@@ -95,10 +109,10 @@ export async function renderDashboardView(container: HTMLElement) {
           </div>
         </div>
         <div style="display: flex; gap: 0.75rem;">
-          <div style="background: var(--apple-surface-secondary); padding: 0.75rem 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--apple-border-subtle); text-align: right;">
-            <div style="font-size: 0.72rem; color: var(--apple-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Tahun Ajaran Aktif</div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: var(--apple-blue); margin: 2px 0;">${SD_LONRONG_PROFILE.tahunAjaran}</div>
-            <div style="font-size: 0.8rem; color: var(--apple-text-secondary); font-weight: 500;">${SD_LONRONG_PROFILE.semesterAktif}</div>
+          <div style="background: var(--apple-surface-secondary); padding: 0.85rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--apple-border-subtle); text-align: right; min-width: 170px;">
+            <div class="solid-badge solid-badge-dark" style="font-size: 0.7rem; padding: 0.15rem 0.5rem; margin-bottom: 0.35rem; display: inline-flex;">Tahun Ajaran Aktif</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--apple-text-primary); margin: 2px 0;">${SD_LONRONG_PROFILE.tahunAjaran}</div>
+            <div style="font-size: 0.82rem; color: var(--apple-text-secondary); font-weight: 500;">${SD_LONRONG_PROFILE.semesterAktif}</div>
           </div>
         </div>
       </div>
@@ -106,25 +120,33 @@ export async function renderDashboardView(container: HTMLElement) {
       <!-- Quick Actions Bar (Pusat Aksi Cepat Administrasi) -->
       <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.75rem 1.15rem; margin-bottom: 1.35rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; font-weight: 700; color: var(--apple-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 14 14"></polyline></svg>
           Aksi Cepat Administrasi:
         </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button class="apple-btn apple-btn-secondary" id="qaBtnSiswa" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-            + Tambah Siswa
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+          <button class="apple-btn apple-btn-secondary" id="qaBtnSiswa" style="font-size: 0.82rem; padding: 0.35rem 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="qa-icon-box qa-blue">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            </span>
+            <span>+ Tambah Siswa</span>
           </button>
-          <button class="apple-btn apple-btn-secondary" id="qaBtnTamu" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            + Catat Buku Tamu
+          <button class="apple-btn apple-btn-secondary" id="qaBtnTamu" style="font-size: 0.82rem; padding: 0.35rem 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="qa-icon-box qa-emerald">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </span>
+            <span>+ Catat Buku Tamu</span>
           </button>
-          <button class="apple-btn apple-btn-secondary" id="qaBtnJurnal" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg>
-            + Isi Jurnal Harian
+          <button class="apple-btn apple-btn-secondary" id="qaBtnJurnal" style="font-size: 0.82rem; padding: 0.35rem 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="qa-icon-box qa-violet">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg>
+            </span>
+            <span>+ Isi Jurnal Harian</span>
           </button>
-          <button class="apple-btn apple-btn-secondary" id="qaBtnEfiling" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            + Unggah Arsip Berkas
+          <button class="apple-btn apple-btn-secondary" id="qaBtnEfiling" style="font-size: 0.82rem; padding: 0.35rem 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="qa-icon-box qa-amber">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            </span>
+            <span>+ Unggah Arsip Berkas</span>
           </button>
         </div>
       </div>
@@ -134,16 +156,21 @@ export async function renderDashboardView(container: HTMLElement) {
         <!-- Card 1: Siswa Aktif -->
         <div class="bento-card bento-card-interactive" id="cardNavSiswa" style="grid-column: span 3;" title="Klik untuk membuka Data Siswa & Alumni">
           <div class="card-header">
-            <span class="card-title">Peserta Didik</span>
-            <span class="status-pill success" style="font-size: 0.72rem;">Aktif</span>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <div class="solid-card-icon solid-card-icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <span class="card-title">Peserta Didik</span>
+            </div>
+            <span class="solid-badge solid-badge-emerald">Aktif</span>
           </div>
-          <div class="metric-val">${totalSiswa} <span style="font-size: 1.15rem; font-weight: 600; color: var(--apple-text-tertiary);">Siswa</span></div>
+          <div class="metric-val">${totalSiswa} <span style="font-size: 1.15rem; font-weight: 500; color: var(--apple-text-tertiary);">Siswa</span></div>
           <div class="metric-delta">Kelas 1 s/d 6 • +${totalLulus} alumni lulus</div>
           
           <div class="metric-breakdown">
-            <span class="breakdown-chip" style="color: var(--apple-blue);">${totalLakiLaki} Laki-Laki</span>
-            <span class="breakdown-chip" style="color: var(--apple-indigo);">${totalPerempuan} Perempuan</span>
-            <span class="breakdown-chip">100% NISN Valid</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-blue"></span> ${totalLakiLaki} Laki-Laki</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-purple"></span> ${totalPerempuan} Perempuan</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-green"></span> 100% NISN Valid</span>
           </div>
 
           <div class="card-action-link">
@@ -154,17 +181,22 @@ export async function renderDashboardView(container: HTMLElement) {
         <!-- Card 2: Guru & Tendik -->
         <div class="bento-card bento-card-interactive" id="cardNavKepegawaian" style="grid-column: span 3;" title="Klik untuk membuka Data Guru & Beban Mengajar">
           <div class="card-header">
-            <span class="card-title">Pendidik & Tendik</span>
-            <span class="status-pill info" style="font-size: 0.72rem;">GTK</span>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <div class="solid-card-icon solid-card-icon-teal">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <span class="card-title">Pendidik & Tendik</span>
+            </div>
+            <span class="solid-badge solid-badge-slate">GTK Terdaftar</span>
           </div>
-          <div class="metric-val">${totalGuruTendik} <span style="font-size: 1.15rem; font-weight: 600; color: var(--apple-text-tertiary);">Orang</span></div>
+          <div class="metric-val">${totalGuruTendik} <span style="font-size: 1.15rem; font-weight: 500; color: var(--apple-text-tertiary);">Orang</span></div>
           <div class="metric-delta">1 Kepsek, 6 Guru, 1 Operator • Rasio 1:${Math.round(totalSiswa / (totalGuruTendik || 1))}</div>
 
           <div class="metric-breakdown">
-            <span class="breakdown-chip">${pnsCount} PNS</span>
-            <span class="breakdown-chip">${pppkCount} PPPK</span>
-            <span class="breakdown-chip">${honorerCount} Honorer</span>
-            <span class="breakdown-chip" style="color: var(--apple-green);">${guruMemenuhiBeban}/${guruKelasMapel.length} Memenuhi 24 JJM</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-blue"></span> ${pnsCount} PNS</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-purple"></span> ${pppkCount} PPPK</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-slate"></span> ${honorerCount} Honorer</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-green"></span> ${guruMemenuhiBeban}/${guruKelasMapel.length} 24 JJM</span>
           </div>
 
           <div class="card-action-link">
@@ -175,16 +207,21 @@ export async function renderDashboardView(container: HTMLElement) {
         <!-- Card 3: Sarana Prasarana -->
         <div class="bento-card bento-card-interactive" id="cardNavSarpras" style="grid-column: span 3;" title="Klik untuk membuka Inventaris Sarana & Prasarana">
           <div class="card-header">
-            <span class="card-title">Inventaris Sarpras</span>
-            <span class="status-pill success" style="font-size: 0.72rem;">100% Layak</span>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <div class="solid-card-icon solid-card-icon-amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              </div>
+              <span class="card-title">Inventaris Sarpras</span>
+            </div>
+            <span class="solid-badge solid-badge-emerald">100% Layak</span>
           </div>
-          <div class="metric-val">${totalSarprasUnit} <span style="font-size: 1.15rem; font-weight: 600; color: var(--apple-text-tertiary);">Unit</span></div>
+          <div class="metric-val">${totalSarprasUnit} <span style="font-size: 1.15rem; font-weight: 500; color: var(--apple-text-tertiary);">Unit</span></div>
           <div class="metric-delta">${totalSarprasItem} Jenis Aset Terdaftar (KIB B, C, E)</div>
 
           <div class="metric-breakdown">
-            <span class="breakdown-chip">${unitKibB} Unit TIK (KIB B)</span>
-            <span class="breakdown-chip">${unitKibC} Gedung (KIB C)</span>
-            <span class="breakdown-chip">${unitKibE} Buku (KIB E)</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-blue"></span> ${unitKibB} Unit TIK</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-amber"></span> ${unitKibC} Bangunan</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-green"></span> ${unitKibE} Buku</span>
           </div>
 
           <div class="card-action-link">
@@ -195,20 +232,23 @@ export async function renderDashboardView(container: HTMLElement) {
         <!-- Card 4: Buku Tamu & Kinerja -->
         <div class="bento-card bento-card-interactive" id="cardNavJurnal" style="grid-column: span 3;" title="Klik untuk membuka Jurnal Harian Mengajar Guru">
           <div class="card-header">
-            <span class="card-title">Jurnal Guru & Tamu</span>
-            ${
-              pendingJurnalCount > 0
-                ? `<span class="status-pill warning" style="font-size: 0.72rem;">${pendingJurnalCount} Perlu Verifikasi</span>`
-                : `<span class="status-pill success" style="font-size: 0.72rem;">Semua Terverifikasi</span>`
-            }
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <div class="solid-card-icon solid-card-icon-violet">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg>
+              </div>
+              <span class="card-title">Jurnal & Tamu</span>
+            </div>
+            <span class="solid-badge ${pendingJurnalCount > 0 ? 'solid-badge-amber' : 'solid-badge-emerald'}">
+              ${pendingJurnalCount > 0 ? `${pendingJurnalCount} Perlu Verifikasi` : 'Terverifikasi'}
+            </span>
           </div>
-          <div class="metric-val">${totalJurnal} <span style="font-size: 1.15rem; font-weight: 600; color: var(--apple-text-tertiary);">Jurnal</span></div>
+          <div class="metric-val">${totalJurnal} <span style="font-size: 1.15rem; font-weight: 500; color: var(--apple-text-tertiary);">Jurnal</span></div>
           <div class="metric-delta">${totalBukuTamu} Tamu Resmi Tercatat di Buku Tamu</div>
 
           <div class="metric-breakdown">
-            <span class="breakdown-chip">${pendingJurnalCount} Menunggu Kepsek</span>
-            <span class="breakdown-chip">${totalJurnal - pendingJurnalCount} Disetujui</span>
-            <span class="breakdown-chip">Dapodik & BKN</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-amber"></span> ${pendingJurnalCount} Menunggu</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-green"></span> ${totalJurnal - pendingJurnalCount} Disetujui</span>
+            <span class="breakdown-chip"><span class="solid-dot dot-blue"></span> Dapodik & BKN</span>
           </div>
 
           <div class="card-action-link">

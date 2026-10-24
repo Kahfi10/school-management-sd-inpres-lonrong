@@ -868,51 +868,150 @@ p {
   border-bottom: none;
 }
 
-/* Status Badges */
+/* ==========================================================================
+   Solid Badges & Status Indicators (High-End, Rich Solid Colors)
+   ========================================================================== */
+.solid-badge,
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.22rem 0.65rem;
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  background: var(--apple-surface-secondary);
-  color: var(--apple-text-secondary);
-  border: 1px solid var(--apple-border);
+  gap: 0.38rem;
+  padding: 0.24rem 0.68rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: #FFFFFF;
   white-space: nowrap;
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  line-height: 1.35;
+  transition: transform var(--duration-fast);
 }
 
+.solid-badge svg,
+.status-pill svg {
+  flex-shrink: 0;
+}
+
+/* Solid Color Profiles (No Washed-out Pastels) */
+.solid-badge-dark,
+.status-pill.dark {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+}
+
+.solid-badge-emerald,
 .status-pill.success {
-  background: var(--apple-green-light);
-  color: var(--apple-green);
-  border-color: rgba(52, 199, 89, 0.28);
+  background: #047857 !important;
+  color: #FFFFFF !important;
 }
 
-.status-pill.warning {
-  background: var(--apple-orange-light);
-  color: var(--apple-orange);
-  border-color: rgba(255, 149, 0, 0.28);
-}
-
-.status-pill.danger {
-  background: var(--apple-red-light);
-  color: var(--apple-red);
-  border-color: rgba(255, 59, 48, 0.28);
-}
-
+.solid-badge-blue,
 .status-pill.info {
-  background: var(--apple-blue-light);
-  color: var(--apple-blue);
-  border-color: rgba(0, 113, 227, 0.28);
+  background: #1D4ED8 !important;
+  color: #FFFFFF !important;
 }
 
-.status-pill.neutral {
-  background: var(--apple-surface-tertiary);
-  color: var(--apple-text-secondary);
-  border-color: var(--apple-border-subtle);
+.solid-badge-amber,
+.status-pill.warning {
+  background: #B45309 !important;
+  color: #FFFFFF !important;
 }
+
+.solid-badge-rose,
+.status-pill.danger {
+  background: #BE123C !important;
+  color: #FFFFFF !important;
+}
+
+.solid-badge-slate,
+.status-pill.neutral {
+  background: #334155 !important;
+  color: #FFFFFF !important;
+}
+
+.solid-badge-violet {
+  background: #6D28D9 !important;
+  color: #FFFFFF !important;
+}
+
+.solid-badge-teal {
+  background: #0F766E !important;
+  color: #FFFFFF !important;
+}
+
+/* Solid Card Icon Badges (Bento Cards & Metrics) */
+.solid-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.14);
+}
+
+.solid-card-icon-blue {
+  background: #1D4ED8;
+}
+
+.solid-card-icon-teal {
+  background: #0F766E;
+}
+
+.solid-card-icon-amber {
+  background: #B45309;
+}
+
+.solid-card-icon-violet {
+  background: #6D28D9;
+}
+
+.solid-card-icon-emerald {
+  background: #047857;
+}
+
+.solid-card-icon-rose {
+  background: #BE123C;
+}
+
+.solid-card-icon-slate {
+  background: #334155;
+}
+
+/* Quick Action Mini Icon Boxes */
+.qa-icon-box {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+.qa-blue { background: #1D4ED8; }
+.qa-emerald { background: #047857; }
+.qa-violet { background: #6D28D9; }
+.qa-amber { background: #B45309; }
+
+/* Solid Dots in Breakdown Chips */
+.solid-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.dot-blue { background: #1D4ED8; }
+.dot-purple { background: #6D28D9; }
+.dot-green { background: #047857; }
+.dot-amber { background: #B45309; }
+.dot-slate { background: #475569; }
 
 /* Modal Sheet */
 .modal-backdrop {
