@@ -107,12 +107,12 @@ export async function renderDashboardView(container: HTMLElement) {
       <div style="background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-md); padding: 0.75rem 1.15rem; margin-bottom: 1.35rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; font-weight: 700; color: var(--apple-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
-          Aksi Cepat Sekolah:
+          Aksi Cepat Administrasi:
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
           <button class="apple-btn apple-btn-secondary" id="qaBtnSiswa" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-            + Siswa Baru
+            + Tambah Siswa
           </button>
           <button class="apple-btn apple-btn-secondary" id="qaBtnTamu" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -120,11 +120,11 @@ export async function renderDashboardView(container: HTMLElement) {
           </button>
           <button class="apple-btn apple-btn-secondary" id="qaBtnJurnal" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg>
-            + Tulis E-Kinerja
+            + Isi Jurnal Harian
           </button>
           <button class="apple-btn apple-btn-secondary" id="qaBtnEfiling" style="font-size: 0.82rem; padding: 0.45rem 0.85rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            Upload Arsip Drive
+            + Unggah Arsip Berkas
           </button>
         </div>
       </div>
@@ -132,7 +132,7 @@ export async function renderDashboardView(container: HTMLElement) {
       <!-- Bento Metric Highlights (Row 1 - Informative & Interactive) -->
       <div class="bento-grid" style="margin-bottom: 1.35rem;">
         <!-- Card 1: Siswa Aktif -->
-        <div class="bento-card bento-card-interactive" id="cardNavSiswa" style="grid-column: span 3;" title="Klik untuk membuka Manajemen Siswa & Alumni">
+        <div class="bento-card bento-card-interactive" id="cardNavSiswa" style="grid-column: span 3;" title="Klik untuk membuka Data Siswa & Alumni">
           <div class="card-header">
             <span class="card-title">Peserta Didik</span>
             <span class="status-pill success" style="font-size: 0.72rem;">Aktif</span>
@@ -152,7 +152,7 @@ export async function renderDashboardView(container: HTMLElement) {
         </div>
 
         <!-- Card 2: Guru & Tendik -->
-        <div class="bento-card bento-card-interactive" id="cardNavKepegawaian" style="grid-column: span 3;" title="Klik untuk membuka Kepegawaian & Beban Ajar">
+        <div class="bento-card bento-card-interactive" id="cardNavKepegawaian" style="grid-column: span 3;" title="Klik untuk membuka Data Guru & Beban Mengajar">
           <div class="card-header">
             <span class="card-title">Pendidik & Tendik</span>
             <span class="status-pill info" style="font-size: 0.72rem;">GTK</span>
@@ -168,12 +168,12 @@ export async function renderDashboardView(container: HTMLElement) {
           </div>
 
           <div class="card-action-link">
-            Kelola Beban Ajar Guru →
+            Kelola Beban Mengajar Guru →
           </div>
         </div>
 
         <!-- Card 3: Sarana Prasarana -->
-        <div class="bento-card bento-card-interactive" id="cardNavSarpras" style="grid-column: span 3;" title="Klik untuk membuka Inventaris Sarpras">
+        <div class="bento-card bento-card-interactive" id="cardNavSarpras" style="grid-column: span 3;" title="Klik untuk membuka Inventaris Sarana & Prasarana">
           <div class="card-header">
             <span class="card-title">Inventaris Sarpras</span>
             <span class="status-pill success" style="font-size: 0.72rem;">100% Layak</span>
@@ -193,9 +193,9 @@ export async function renderDashboardView(container: HTMLElement) {
         </div>
 
         <!-- Card 4: Buku Tamu & Kinerja -->
-        <div class="bento-card bento-card-interactive" id="cardNavJurnal" style="grid-column: span 3;" title="Klik untuk membuka Jurnal E-Kinerja">
+        <div class="bento-card bento-card-interactive" id="cardNavJurnal" style="grid-column: span 3;" title="Klik untuk membuka Jurnal Harian Mengajar Guru">
           <div class="card-header">
-            <span class="card-title">E-Kinerja & Tamu</span>
+            <span class="card-title">Jurnal Guru & Tamu</span>
             ${
               pendingJurnalCount > 0
                 ? `<span class="status-pill warning" style="font-size: 0.72rem;">${pendingJurnalCount} Perlu Verifikasi</span>`
@@ -208,11 +208,11 @@ export async function renderDashboardView(container: HTMLElement) {
           <div class="metric-breakdown">
             <span class="breakdown-chip">${pendingJurnalCount} Menunggu Kepsek</span>
             <span class="breakdown-chip">${totalJurnal - pendingJurnalCount} Disetujui</span>
-            <span class="breakdown-chip">Terhubung BKN</span>
+            <span class="breakdown-chip">Dapodik & BKN</span>
           </div>
 
           <div class="card-action-link">
-            Tinjau Jurnal E-Kinerja →
+            Buka Jurnal Mengajar Guru →
           </div>
         </div>
       </div>
