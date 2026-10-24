@@ -654,44 +654,35 @@ p {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.88rem;
-  font-weight: 500;
-  margin-top: 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 450;
+  margin-top: 0.45rem;
   padding: 0;
   background: transparent !important;
   color: var(--apple-text-secondary);
 }
 
-.bento-card .metric-breakdown {
+.card-sub-info {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.95rem;
-  padding-top: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
   border-top: 1px solid var(--apple-border-subtle);
-}
-
-.bento-card .breakdown-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
   font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-xs);
-  background: var(--apple-surface-secondary);
-  color: var(--apple-text-secondary);
-  border: 1px solid var(--apple-border-subtle);
+  color: var(--apple-text-tertiary);
+  font-weight: 450;
 }
 
-.bento-card .card-action-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8rem;
-  font-weight: 600;
+.card-action-arrow {
   color: var(--apple-blue);
-  margin-top: 0.65rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform var(--duration-fast) var(--ease-apple);
+}
+
+.bento-card-interactive:hover .card-action-arrow {
+  transform: translateX(4px);
 }
 
 .metric-delta.positive,
