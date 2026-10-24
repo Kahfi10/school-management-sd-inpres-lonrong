@@ -2,7 +2,7 @@
    LONRONG SMARTEDU - APPLE HUMAN INTERFACE GUIDELINES (HIG) DESIGN SYSTEM
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   /* System Canvases */
@@ -59,9 +59,9 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Typography Scale - High Legibility System Sans-Serif */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* Typography Scale - High Legibility Sans-Serif */
+  --font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Animation Curves */
   --spring-bounce: cubic-bezier(0.16, 1, 0.3, 1);
@@ -159,11 +159,12 @@
   --apple-red-light: rgba(255, 59, 48, 0.2);
 }
 
-/* Reset & Global Base */
+/* Reset & Global Base - 100% Sans-Serif System */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: var(--font-family-sans);
 }
 
 html, body {
@@ -171,11 +172,15 @@ html, body {
   font-family: var(--font-family-sans);
   background-color: var(--apple-bg);
   color: var(--apple-text-primary);
-  font-size: 15.5px;
+  font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+button, input, select, textarea, optgroup {
+  font-family: inherit;
 }
 
 /* Typography Hierarchy */
@@ -246,8 +251,8 @@ p {
 }
 
 .school-meta .brand-title {
-  font-weight: 700;
-  font-size: 1.02rem;
+  font-weight: 550;
+  font-size: 0.98rem;
   letter-spacing: -0.015em;
   color: var(--apple-text-primary);
   white-space: nowrap;
@@ -256,9 +261,9 @@ p {
 }
 
 .school-meta .brand-sub {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: var(--apple-text-tertiary);
-  font-weight: 500;
+  font-weight: 400;
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -275,23 +280,24 @@ p {
 }
 
 .nav-section-label {
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 450;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--apple-text-tertiary);
-  padding: 0.65rem 0.75rem 0.25rem 0.75rem;
+  padding: 0.75rem 0.85rem 0.25rem 0.85rem;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0.85rem;
+  padding: 0.58rem 0.85rem;
   border-radius: var(--radius-sm);
   color: var(--apple-text-secondary);
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 350;
+  font-size: 0.88rem;
+  letter-spacing: -0.005em;
   text-decoration: none;
   cursor: pointer;
   border: none;
@@ -301,15 +307,29 @@ p {
   transition: all var(--duration-fast) var(--ease-apple);
 }
 
+.nav-item span {
+  font-weight: 350;
+}
+
 .nav-item:hover {
   background-color: var(--apple-surface-tertiary);
   color: var(--apple-text-primary);
 }
 
+.nav-item:hover span {
+  font-weight: 350;
+}
+
 .nav-item.active {
   background-color: var(--apple-blue);
   color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.28);
+  font-weight: 450;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.22);
+}
+
+.nav-item.active span {
+  font-weight: 450;
+  color: #FFFFFF;
 }
 
 .nav-item.active .nav-icon {
@@ -317,14 +337,18 @@ p {
 }
 
 .nav-item .nav-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: var(--apple-text-tertiary);
   transition: color var(--duration-fast);
+}
+
+.nav-item .nav-icon svg {
+  stroke-width: 1.6;
 }
 
 .nav-item:hover .nav-icon {
@@ -334,7 +358,7 @@ p {
 .nav-item .nav-badge {
   margin-left: auto;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 450;
   padding: 0.12rem 0.45rem;
   border-radius: var(--radius-full);
   background: var(--apple-blue-light);
