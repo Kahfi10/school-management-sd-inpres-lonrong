@@ -15,6 +15,16 @@ export default defineConfig({
     sourcemap: false, // Point 16: Private source map - prevent source code leakage in production
     minify: 'esbuild',
     target: 'es2022',
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-excel': ['xlsx'],
+          'vendor-charts': ['chart.js'],
+          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+          'vendor-core': ['dexie', 'dompurify', 'lucide', 'signature_pad'],
+        },
+      },
+    },
   },
 });
