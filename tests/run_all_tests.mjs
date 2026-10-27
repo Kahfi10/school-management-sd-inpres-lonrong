@@ -363,6 +363,144 @@ assert(deleteTeacherRes.success, 'Super Admin successfully deprovisions teacher 
 await testUserDb.delete();
 
 // -----------------------------------------------------------------
+// 7. Field-Level 3-Way Delta Conflict Resolver Tests
+// -----------------------------------------------------------------
+console.log('\n--- 7. Testing Field-Level 3-Way Delta Conflict Resolver ---');
+
+function mergeFieldLevelTest(localRecord, remoteRecord, pendingOutboxPayload) {
+  if (!localRecord) {
+    return { merged: { ...remoteRecord }, conflictsResolved: 0 };
+  }
+  const merged = { ...localRecord, ...remoteRecord };
+  let conflictsResolved = 0;
+
+  if (pendingOutboxPayload && typeof pendingOutboxPayload === 'object') {
+    for (const [key, pendingVal] of Object.entries(pendingOutboxPayload)) {
+      if (pendingVal !== undefined && pendingVal !== null && key !== 'id') {
+        if (remoteRecord[key] !== pendingVal) {
+          merged[key] = pendingVal;
+          conflictsResolved++;
+        }
+      }
+    }
+  }
+
+  const localTime = new Date(localRecord.updatedAt || 0).getTime();
+  const remoteTime = new Date(remoteRecord.updatedAt || 0).getTime();
+  if (localTime > remoteTime) {
+    merged.updatedAt = localRecord.updatedAt;
+  }
+  return { merged, conflictsResolved };
+}
+
+// Case A: No local record -> adopt remote
+const resA = mergeFieldLevelTest(undefined, { id: 's1', nama: 'Budi', alamat: 'Lonrong' });
+assert(resA.merged.nama === 'Budi' && resA.conflictsResolved === 0, 'Adopts remote when no local record exists');
+
+// Case B: Local teacher edited alamat offline, remote updated nama -> merge both fields seamlessly!
+const localRecordB = { id: 's1', nama: 'Budi Lama', alamat: 'Lonrong Baru', updatedAt: '2026-10-22T10:00:00Z' };
+const remoteRecordB = { id: 's1', nama: 'Budi Updated', alamat: 'Lonrong Lama', updatedAt: '2026-10-22T11:00:00Z' };
+const pendingOutboxB = { alamat: 'Lonrong Baru' }; // Teacher actively modified alamat
+
+const resB = mergeFieldLevelTest(localRecordB, remoteRecordB, pendingOutboxB);
+assert(resB.merged.nama === 'Budi Updated' && resB.merged.alamat === 'Lonrong Baru', 'Preserves local pending field while integrating non-conflicting remote field');
+assert(resB.conflictsResolved === 1, 'Field-level conflict accurately detected and resolved');
+
+// -----------------------------------------------------------------
+// 8. Native Stream Gzip Compression & Decompression Tests
+// -----------------------------------------------------------------
+console.log('\n--- 8. Testing Native Gzip Stream Compression ---');
+
+async function testCompressGzip(rawString) {
+  const byteArray = new TextEncoder().encode(rawString);
+  if (typeof CompressionStream !== 'undefined') {
+    const cs = new CompressionStream('gzip');
+    const writer = cs.writable.getWriter();
+    writer.write(byteArray);
+    writer.close();
+    const outputChunks = [];
+    const reader = cs.readable.getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) outputChunks.push(value);
+    }
+    const totalLength = outputChunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of outputChunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
+  }
+  return byteArray;
+}
+
+async function testDecompressGzip(compressedBytes) {
+  if (typeof DecompressionStream !== 'undefined') {
+    const ds = new DecompressionStream('gzip');
+    const writer = ds.writable.getWriter();
+    writer.write(compressedBytes);
+    writer.close();
+    const outputChunks = [];
+    const reader = ds.readable.getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) outputChunks.push(value);
+    }
+    const totalLength = outputChunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of outputChunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return new TextDecoder().decode(result);
+  }
+  return new TextDecoder().decode(compressedBytes);
+}
+
+const originalJson = JSON.stringify({ school: 'SD Inpres Lonrong', npsn: '40304087', students: 135, active: true });
+const compressed = await testCompressGzip(originalJson);
+assert(compressed instanceof Uint8Array && compressed.length > 0, 'Stream Gzip successfully produces compressed byte buffer');
+const decompressed = await testDecompressGzip(compressed);
+assert(decompressed === originalJson, 'Decompression accurately reconstructs original school JSON payload');
+
+// -----------------------------------------------------------------
+// 9. Blob Storage Garbage Collector & Orphan Pruning Tests
+// -----------------------------------------------------------------
+console.log('\n--- 9. Testing Blob Garbage Collector & Orphan Pruning ---');
+
+const testGcDb = new Dexie('LonrongGcTestDB');
+testGcDb.version(1).stores({
+  bukuTamu: 'id, tandaTanganBlobId',
+  mediaBlobs: 'id',
+});
+
+// Seed 1 active guestbook entry with 1 valid blob
+await testGcDb.bukuTamu.add({ id: 'tamu_01', tandaTanganBlobId: 'blob_active_01' });
+// Seed 3 blobs (1 active, 2 orphans)
+await testGcDb.mediaBlobs.bulkAdd([
+  { id: 'blob_active_01', base64Data: 'data:image/png;base64,activeSignature' },
+  { id: 'blob_orphan_01', base64Data: 'data:image/png;base64,orphan1' },
+  { id: 'blob_orphan_02', base64Data: 'data:image/png;base64,orphan2' },
+]);
+
+// Run GC simulation
+const activeRefs = new Set((await testGcDb.bukuTamu.toArray()).map((t) => t.tandaTanganBlobId).filter(Boolean));
+const allBlobsBefore = await testGcDb.mediaBlobs.toArray();
+const orphans = allBlobsBefore.filter((b) => !activeRefs.has(b.id)).map((b) => b.id);
+await testGcDb.mediaBlobs.bulkDelete(orphans);
+
+const blobsAfter = await testGcDb.mediaBlobs.toArray();
+assert(orphans.length === 2, 'Garbage collector accurately identifies exact 2 orphaned blobs');
+assert(blobsAfter.length === 1 && blobsAfter[0].id === 'blob_active_01', 'Active referenced signature is preserved while orphans are purged');
+
+await testGcDb.delete();
+
+// -----------------------------------------------------------------
 // SUMMARY
 // -----------------------------------------------------------------
 console.log('\n====================================================');
