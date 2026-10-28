@@ -18,9 +18,10 @@
 
 import DOMPurify from 'dompurify';
 import { db } from '../db/local_db';
+import { hashPasswordWithWorker } from './crypto_worker_offloader';
 
 // ----------------------------------------------------------------------------
-// 1. CRYPTOGRAPHIC PASSWORD HASHING (PBKDF2 / SHA-256 via Web Crypto API)
+// 1. CRYPTOGRAPHIC PASSWORD HASHING (PBKDF2 / SHA-256 via Web Crypto API & Worker)
 // ----------------------------------------------------------------------------
 const passwordHashCache = new Map<string, string>();
 
@@ -30,31 +31,7 @@ export async function hashPassword(password: string, salt: string = 'sd_inpres_l
     return passwordHashCache.get(cacheKey)!;
   }
 
-  const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(password + salt),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveBits', 'deriveKey']
-  );
-
-  const key = await crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: enc.encode(salt),
-      iterations: 100000,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    { name: 'HMAC', hash: 'SHA-256', length: 256 },
-    true,
-    ['sign']
-  );
-
-  const rawKey = await crypto.subtle.exportKey('raw', key);
-  const hashArray = Array.from(new Uint8Array(rawKey));
-  const result = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  const result = await hashPasswordWithWorker(password, salt, 100000);
 
   if (passwordHashCache.size > 100) {
     const firstKey = passwordHashCache.keys().next().value;
