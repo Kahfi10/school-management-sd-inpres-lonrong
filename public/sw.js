@@ -110,3 +110,29 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// Background Sync Event Handler: Automatically flushes pending mutations when network connectivity is restored
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'lonrong-sync-outbox') {
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window' }).then((clients) => {
+        for (const client of clients) {
+          client.postMessage({ type: 'TRIGGER_FLUSH_OUTBOX', timestamp: Date.now() });
+        }
+      })
+    );
+  }
+});
+
+// Periodic Background Sync Handler
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'lonrong-periodic-sync') {
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window' }).then((clients) => {
+        for (const client of clients) {
+          client.postMessage({ type: 'TRIGGER_FLUSH_OUTBOX', timestamp: Date.now() });
+        }
+      })
+    );
+  }
+});

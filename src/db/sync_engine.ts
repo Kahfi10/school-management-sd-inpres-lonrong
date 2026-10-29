@@ -41,7 +41,27 @@ class RealTimeSyncEngine {
     this.initBroadcastChannel();
     this.initNetworkListeners();
     this.initPeriodicHeartbeat();
+    this.initServiceWorkerSyncBridge();
     this.registerLocalDbHooks();
+  }
+
+  private initServiceWorkerSyncBridge() {
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'TRIGGER_FLUSH_OUTBOX') {
+          console.log('[RealTimeSync] Background sync trigger received from Service Worker');
+          this.flushOutbox();
+        }
+      });
+    }
+  }
+
+  public requestBackgroundSync() {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready.then((reg: any) => {
+        reg.sync?.register('lonrong-sync-outbox').catch(() => {});
+      }).catch(() => {});
+    }
   }
 
   /**
@@ -384,6 +404,7 @@ class RealTimeSyncEngine {
       };
 
       await db.syncOutbox.add(outboxItem);
+      this.requestBackgroundSync();
       this.emitTelemetry();
     } catch (err) {
       console.error('[RealTimeSync] Error queuing mutation:', err);
