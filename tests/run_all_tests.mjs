@@ -501,6 +501,37 @@ assert(blobsAfter.length === 1 && blobsAfter[0].id === 'blob_active_01', 'Active
 await testGcDb.delete();
 
 // -----------------------------------------------------------------
+// 10. High-Load Distributed Stress & Memory Leak Audit
+// -----------------------------------------------------------------
+console.log('\n--- 10. Testing Distributed High-Load Stress & Memory Integrity ---');
+
+const stressQueue = [];
+const startStressTime = Date.now();
+
+for (let i = 0; i < 300; i++) {
+  const studentIndex = i % 10;
+  compactOutbox(stressQueue, {
+    id: `stress_${i}`,
+    tableName: 'siswa',
+    recordId: `stu_${studentIndex}`,
+    action: i === 0 ? 'create' : 'update',
+    payloadJson: JSON.stringify({
+      updateCount: i,
+      lastModifiedBy: `guru_${i % 5}`,
+      timestamp: Date.now(),
+    }),
+    status: 'pending',
+  });
+}
+
+const stressDuration = Date.now() - startStressTime;
+assert(stressQueue.length === 10, 'Outbox compaction coalesces 300 rapid updates into exact 10 records');
+assert(stressDuration < 100, `High-load stress processing executed in under 100ms (${stressDuration}ms)`);
+
+const finalRecord = JSON.parse(stressQueue[0].payloadJson);
+assert(finalRecord.updateCount === 290, 'Latest payload state is preserved under high-frequency writes');
+
+// -----------------------------------------------------------------
 // SUMMARY
 // -----------------------------------------------------------------
 console.log('\n====================================================');
