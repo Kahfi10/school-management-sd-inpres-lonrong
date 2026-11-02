@@ -235,6 +235,51 @@ export class LonrongDatabase extends Dexie {
     this.setupAutoSyncHooks();
   }
 
+  // High-Speed Query Plan & Cache for Instant Tab Switching
+  private queryCache = new Map<string, { data: any; expiry: number }>();
+
+  public getCachedQuery<T>(cacheKey: string): T | null {
+    const item = this.queryCache.get(cacheKey);
+    if (!item) return null;
+    if (Date.now() > item.expiry) {
+      this.queryCache.delete(cacheKey);
+      return null;
+    }
+    return item.data as T;
+  }
+
+  public setCachedQuery<T>(cacheKey: string, data: T, ttlMs: number = 2500): void {
+    if (this.queryCache.size > 50) {
+      const oldestKey = this.queryCache.keys().next().value;
+      if (oldestKey) this.queryCache.delete(oldestKey);
+    }
+    this.queryCache.set(cacheKey, { data, expiry: Date.now() + ttlMs });
+  }
+
+  public invalidateQueryCache(): void {
+    this.queryCache.clear();
+  }
+
+  /**
+   * Optimized compound index query for students by status and grade with plan caching
+   */
+  public async getStudentsByStatusAndGrade(
+    status: 'aktif' | 'lulus' | 'mutasi_keluar',
+    grade: number
+  ): Promise<SiswaRecord[]> {
+    const cacheKey = `students_${status}_${grade}`;
+    const cached = this.getCachedQuery<SiswaRecord[]>(cacheKey);
+    if (cached) return cached;
+
+    const results = await this.siswa
+      .where('[statusSiswa+tingkatKelas]')
+      .equals([status, grade])
+      .toArray();
+
+    this.setCachedQuery(cacheKey, results, 2500);
+    return results;
+  }
+
   private setupAutoSyncHooks() {
     const trackedTables = [
       'users',
@@ -255,6 +300,7 @@ export class LonrongDatabase extends Dexie {
 
       table.hook('creating', (primKey: any, obj: any) => {
         if (this.isSeeding || this.isSyncPulling) return;
+        this.invalidateQueryCache();
         const recordId = String(primKey || obj?.id || '');
         setTimeout(() => {
           if (dbMutationHandler) {
@@ -265,6 +311,7 @@ export class LonrongDatabase extends Dexie {
 
       table.hook('updating', (modifications: any, primKey: any, obj: any) => {
         if (this.isSeeding || this.isSyncPulling) return;
+        this.invalidateQueryCache();
         const recordId = String(primKey || obj?.id || '');
         setTimeout(() => {
           if (dbMutationHandler) {
@@ -275,6 +322,7 @@ export class LonrongDatabase extends Dexie {
 
       table.hook('deleting', (primKey: any) => {
         if (this.isSeeding || this.isSyncPulling) return;
+        this.invalidateQueryCache();
         const recordId = String(primKey || '');
         setTimeout(() => {
           if (dbMutationHandler) {
