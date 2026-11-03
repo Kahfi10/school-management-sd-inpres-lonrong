@@ -186,6 +186,7 @@ export class LonrongDatabase extends Dexie {
   syncOutbox!: EntityTable<SyncOutboxRecord, 'id'>;
 
   public isSeeding = false;
+  public isSyncPulling = false;
 
   constructor() {
     super('LonrongSmartEduDB');
@@ -208,6 +209,7 @@ export class LonrongDatabase extends Dexie {
 
   private setupAutoSyncHooks() {
     const trackedTables = [
+      'users',
       'pegawai',
       'kelasRombel',
       'siswa',
@@ -224,7 +226,7 @@ export class LonrongDatabase extends Dexie {
       if (!table || typeof table.hook !== 'function') continue;
 
       table.hook('creating', (primKey: any, obj: any) => {
-        if (this.isSeeding) return;
+        if (this.isSeeding || this.isSyncPulling) return;
         const recordId = String(primKey || obj?.id || '');
         setTimeout(() => {
           if (dbMutationHandler) {
@@ -234,7 +236,7 @@ export class LonrongDatabase extends Dexie {
       });
 
       table.hook('updating', (modifications: any, primKey: any, obj: any) => {
-        if (this.isSeeding) return;
+        if (this.isSeeding || this.isSyncPulling) return;
         const recordId = String(primKey || obj?.id || '');
         setTimeout(() => {
           if (dbMutationHandler) {
@@ -244,7 +246,7 @@ export class LonrongDatabase extends Dexie {
       });
 
       table.hook('deleting', (primKey: any) => {
-        if (this.isSeeding) return;
+        if (this.isSeeding || this.isSyncPulling) return;
         const recordId = String(primKey || '');
         setTimeout(() => {
           if (dbMutationHandler) {

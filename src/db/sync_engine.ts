@@ -15,6 +15,7 @@ type SyncListener = (telemetry: SyncTelemetry) => void;
 type DataChangeListener = (tableName: string, action: DbMutationAction, recordId: string) => void;
 
 interface RealtimeBroadcastMessage {
+  messageId: string;
   type: 'DB_MUTATION' | 'SYNC_FLUSHED';
   tableName?: string;
   action?: DbMutationAction;
@@ -34,6 +35,7 @@ class RealTimeSyncEngine {
   private relativeTimeInterval: any = null;
   private broadcastChannel: BroadcastChannel | null = null;
   private tabId = `tab_${Math.random().toString(36).substring(2, 9)}`;
+  private handledMessageIds = new Set<string>();
 
   constructor() {
     this.initBroadcastChannel();
@@ -43,7 +45,21 @@ class RealTimeSyncEngine {
   }
 
   /**
-   * Initialize cross-tab & cross-window real-time BroadcastChannel
+   * Check and register messageId to prevent echo loops and duplicate events
+   */
+  private isMessageAlreadyHandled(msgId: string): boolean {
+    if (!msgId) return false;
+    if (this.handledMessageIds.has(msgId)) return true;
+    this.handledMessageIds.add(msgId);
+    if (this.handledMessageIds.size > 200) {
+      const oldest = this.handledMessageIds.values().next().value;
+      if (oldest) this.handledMessageIds.delete(oldest);
+    }
+    return false;
+  }
+
+  /**
+   * Initialize cross-tab & cross-window real-time BroadcastChannel with message deduplication
    */
   private initBroadcastChannel() {
     try {
@@ -52,6 +68,8 @@ class RealTimeSyncEngine {
         this.broadcastChannel.onmessage = (event: MessageEvent<RealtimeBroadcastMessage>) => {
           const msg = event.data;
           if (!msg || msg.senderTabId === this.tabId) return;
+
+          if (this.isMessageAlreadyHandled(msg.messageId)) return;
 
           if (msg.type === 'DB_MUTATION' && msg.tableName && msg.action && msg.recordId) {
             console.log(`[RealTimeSync] Cross-tab real-time event received: ${msg.tableName} (${msg.action})`);
@@ -67,13 +85,15 @@ class RealTimeSyncEngine {
       console.warn('[RealTimeSync] BroadcastChannel not supported in this environment:', e);
     }
 
-    // HTML5 Storage Event Fallback for 100% reliable cross-tab sync
+    // HTML5 Storage Event Fallback for 100% reliable cross-tab sync with deduplication
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', (event: StorageEvent) => {
         if (event.key === 'lonrong_cross_tab_sync_event' && event.newValue) {
           try {
             const data = JSON.parse(event.newValue);
             if (data && data.senderTabId !== this.tabId && data.tableName) {
+              if (this.isMessageAlreadyHandled(data.messageId)) return;
+
               console.log(`[RealTimeSync] Storage event cross-tab update: ${data.tableName} (${data.action})`);
               this.notifyDataSubscribers(data.tableName, data.action, data.recordId, false);
               this.emitTelemetry();
@@ -170,9 +190,13 @@ class RealTimeSyncEngine {
 
     // 3. Broadcast to other open browser tabs/windows
     if (broadcastToOtherTabs) {
+      const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      this.isMessageAlreadyHandled(messageId); // mark locally so sender ignores self if echoed
+
       if (this.broadcastChannel) {
         try {
           this.broadcastChannel.postMessage({
+            messageId,
             type: 'DB_MUTATION',
             tableName,
             action,
@@ -190,6 +214,7 @@ class RealTimeSyncEngine {
         localStorage.setItem(
           'lonrong_cross_tab_sync_event',
           JSON.stringify({
+            messageId,
             tableName,
             action,
             recordId,
@@ -270,7 +295,7 @@ class RealTimeSyncEngine {
   }
 
   /**
-   * Queue a local mutation to be synchronized to the cloud
+   * Queue a local mutation to be synchronized to the cloud with smart outbox compaction (coalescing)
    */
   public async queueMutation(
     tableName: string,
@@ -279,6 +304,74 @@ class RealTimeSyncEngine {
     payload: unknown
   ) {
     try {
+      // Outbox Compaction: check if a pending mutation already exists for this entity
+      const existing = await db.syncOutbox
+        .where('tableName')
+        .equals(tableName)
+        .filter((it) => it.recordId === recordId && it.status === 'pending')
+        .first();
+
+      if (existing) {
+        if (existing.action === 'create') {
+          if (action === 'update') {
+            // Merge into existing create mutation
+            let oldPayload = {};
+            try {
+              oldPayload = JSON.parse(existing.payloadJson || '{}');
+            } catch {
+              oldPayload = {};
+            }
+            const merged = { ...oldPayload, ...(payload as any || {}) };
+            await db.syncOutbox.update(existing.id, {
+              payloadJson: JSON.stringify(merged),
+              timestamp: Date.now(),
+            });
+            this.emitTelemetry();
+            return;
+          } else if (action === 'delete') {
+            // Created and deleted offline before ever pushing to cloud: purge from outbox completely!
+            await db.syncOutbox.delete(existing.id);
+            this.emitTelemetry();
+            return;
+          }
+        } else if (existing.action === 'update') {
+          if (action === 'update') {
+            // Merge into latest update payload
+            let oldPayload = {};
+            try {
+              oldPayload = JSON.parse(existing.payloadJson || '{}');
+            } catch {
+              oldPayload = {};
+            }
+            const merged = { ...oldPayload, ...(payload as any || {}) };
+            await db.syncOutbox.update(existing.id, {
+              payloadJson: JSON.stringify(merged),
+              timestamp: Date.now(),
+            });
+            this.emitTelemetry();
+            return;
+          } else if (action === 'delete') {
+            // Change action to delete
+            await db.syncOutbox.update(existing.id, {
+              action: 'delete',
+              payloadJson: '{}',
+              timestamp: Date.now(),
+            });
+            this.emitTelemetry();
+            return;
+          }
+        } else if (existing.action === 'delete' && action === 'create') {
+          // Re-created after delete
+          await db.syncOutbox.update(existing.id, {
+            action: 'update',
+            payloadJson: JSON.stringify(payload || {}),
+            timestamp: Date.now(),
+          });
+          this.emitTelemetry();
+          return;
+        }
+      }
+
       const outboxItem: SyncOutboxRecord = {
         id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
         tableName,
@@ -292,16 +385,13 @@ class RealTimeSyncEngine {
 
       await db.syncOutbox.add(outboxItem);
       this.emitTelemetry();
-
-      // Immediately broadcast to other open tabs and refresh local views
-      this.notifyDataSubscribers(tableName, action, recordId, true);
     } catch (err) {
       console.error('[RealTimeSync] Error queuing mutation:', err);
     }
   }
 
   /**
-   * Process pending outbox mutations automatically
+   * Process pending outbox mutations using high-efficiency batch requests
    */
   public async flushOutbox(): Promise<{ processed: number; errors: number }> {
     if (this.isSyncing || !this.networkOnline) {
@@ -315,7 +405,7 @@ class RealTimeSyncEngine {
       const pendingItems = await db.syncOutbox
         .where('status')
         .equals('pending')
-        .limit(30)
+        .limit(50)
         .toArray();
 
       if (pendingItems.length === 0) {
@@ -325,32 +415,29 @@ class RealTimeSyncEngine {
         return { processed: 0, errors: 0 };
       }
 
-      let processed = 0;
-      let errors = 0;
+      // Execute Bulk / Batch Push in a single round-trip
+      const { successfulIds, failedIds } = await cloudSyncService.pushBatch(pendingItems);
 
-      // Real-time edge sync simulation with minimal latency (50ms per item)
-      for (const item of pendingItems) {
-        try {
-          // 1. Push to Cloud Provider (Supabase / Google Sheets) if configured
-          const cloudPushed = await cloudSyncService.pushMutation(item);
+      // Update successful mutations in local database
+      for (const id of successfulIds) {
+        await db.syncOutbox.update(id, {
+          status: 'synced',
+        });
+      }
 
-          if (cloudPushed) {
-            // Mark as synced locally
-            await db.syncOutbox.update(item.id, {
-              status: 'synced',
-            });
-            processed++;
-          } else {
-            throw new Error('Cloud push returned false');
-          }
-        } catch (err) {
-          errors++;
-          await db.syncOutbox.update(item.id, {
+      // Update failed mutations and increment retry count
+      for (const id of failedIds) {
+        const item = pendingItems.find((p) => p.id === id);
+        if (item) {
+          await db.syncOutbox.update(id, {
             retryCount: item.retryCount + 1,
-            status: item.retryCount > 4 ? 'failed' : 'pending',
+            status: item.retryCount >= 4 ? 'failed' : 'pending',
           });
         }
       }
+
+      const processed = successfulIds.length;
+      const errors = failedIds.length;
 
       this.isSyncing = false;
       this.lastSyncedAt = new Date();
@@ -359,7 +446,10 @@ class RealTimeSyncEngine {
       // Broadcast sync completion to other tabs
       if (this.broadcastChannel) {
         try {
+          const syncMsgId = `flushed_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+          this.isMessageAlreadyHandled(syncMsgId);
           this.broadcastChannel.postMessage({
+            messageId: syncMsgId,
             type: 'SYNC_FLUSHED',
             syncedAt: this.lastSyncedAt.getTime(),
             timestamp: Date.now(),
@@ -373,7 +463,7 @@ class RealTimeSyncEngine {
       // If more items remain, immediately continue flushing
       const remainingCount = await db.syncOutbox.where('status').equals('pending').count();
       if (remainingCount > 0 && this.networkOnline) {
-        setTimeout(() => this.flushOutbox(), 100);
+        setTimeout(() => this.flushOutbox(), 80);
       }
 
       return { processed, errors };

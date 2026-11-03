@@ -10,6 +10,21 @@ export interface CloudSyncConfig {
   autoSyncEnabled: boolean;
 }
 
+export const ALL_SYNC_TABLES = [
+  'users',
+  'pegawai',
+  'kelasRombel',
+  'siswa',
+  'mutasiSiswa',
+  'bebanAjar',
+  'arsipDigital',
+  'sarpras',
+  'jurnalKinerja',
+  'bukuTamu',
+] as const;
+
+export type SyncTableName = (typeof ALL_SYNC_TABLES)[number];
+
 const CONFIG_STORAGE_KEY = 'lonrong_cloud_sync_config_v1';
 
 export class CloudSyncService {
@@ -120,145 +135,263 @@ export class CloudSyncService {
   }
 
   /**
-   * Push a single mutation to cloud provider
+   * Push a batch of outbox mutations to the configured cloud provider in high-efficiency bulk requests
    */
-  public async pushMutation(item: SyncOutboxRecord): Promise<boolean> {
+  public async pushBatch(
+    items: SyncOutboxRecord[]
+  ): Promise<{ successfulIds: string[]; failedIds: string[] }> {
+    if (items.length === 0) return { successfulIds: [], failedIds: [] };
+
     if (this.config.provider === 'none') {
-      return true; // Local-only mode, consider success
+      // Local-only mode, consider all successful
+      return { successfulIds: items.map((i) => i.id), failedIds: [] };
     }
 
     if (this.config.provider === 'supabase') {
-      return await this.pushToSupabase(item);
+      return await this.pushToSupabaseBatch(items);
     }
 
     if (this.config.provider === 'googlesheets') {
-      return await this.pushToGoogleWebhook(item);
+      return await this.pushToGoogleWebhookBatch(items);
     }
 
-    return true;
+    return { successfulIds: items.map((i) => i.id), failedIds: [] };
   }
 
-  private async pushToSupabase(item: SyncOutboxRecord): Promise<boolean> {
-    if (!this.config.supabaseUrl || !this.config.supabaseAnonKey) return false;
+  /**
+   * High-Efficiency Bulk Upsert / Delete for Supabase PostgREST
+   * Groups items by table and sends 1 bulk POST per table instead of N separate HTTP requests.
+   */
+  private async pushToSupabaseBatch(
+    items: SyncOutboxRecord[]
+  ): Promise<{ successfulIds: string[]; failedIds: string[] }> {
+    if (!this.config.supabaseUrl || !this.config.supabaseAnonKey) {
+      return { successfulIds: [], failedIds: items.map((i) => i.id) };
+    }
 
     const cleanUrl = this.config.supabaseUrl.trim().replace(/\/+$/, '');
-    const endpoint = `${cleanUrl}/rest/v1/${item.tableName}`;
-    const payload = JSON.parse(item.payloadJson || '{}');
+    const successfulIds: string[] = [];
+    const failedIds: string[] = [];
 
-    try {
-      let method = 'POST';
-      let targetUrl = endpoint;
-
-      if (item.action === 'create') {
-        method = 'POST';
-        // Use Prefer: resolution=merge-duplicates so creates act as upserts
-        const res = await fetch(targetUrl, {
-          method,
-          headers: {
-            'apikey': this.config.supabaseAnonKey.trim(),
-            'Authorization': `Bearer ${this.config.supabaseAnonKey.trim()}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates',
-          },
-          body: JSON.stringify(payload),
-        });
-        return res.ok;
-      } else if (item.action === 'update') {
-        method = 'PATCH';
-        targetUrl = `${endpoint}?id=eq.${encodeURIComponent(item.recordId)}`;
-        const res = await fetch(targetUrl, {
-          method,
-          headers: {
-            'apikey': this.config.supabaseAnonKey.trim(),
-            'Authorization': `Bearer ${this.config.supabaseAnonKey.trim()}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-        return res.ok;
-      } else if (item.action === 'delete') {
-        method = 'DELETE';
-        targetUrl = `${endpoint}?id=eq.${encodeURIComponent(item.recordId)}`;
-        const res = await fetch(targetUrl, {
-          method,
-          headers: {
-            'apikey': this.config.supabaseAnonKey.trim(),
-            'Authorization': `Bearer ${this.config.supabaseAnonKey.trim()}`,
-          },
-        });
-        return res.ok;
-      }
-      return true;
-    } catch (e) {
-      console.error('[CloudSync] Supabase push error:', e);
-      return false;
+    // Group items by table
+    const tableMap = new Map<string, SyncOutboxRecord[]>();
+    for (const item of items) {
+      const list = tableMap.get(item.tableName) || [];
+      list.push(item);
+      tableMap.set(item.tableName, list);
     }
+
+    for (const [tableName, tableItems] of tableMap.entries()) {
+      const endpoint = `${cleanUrl}/rest/v1/${tableName}`;
+      const upsertItems: SyncOutboxRecord[] = [];
+      const deleteItems: SyncOutboxRecord[] = [];
+
+      for (const it of tableItems) {
+        if (it.action === 'delete') {
+          deleteItems.push(it);
+        } else {
+          upsertItems.push(it);
+        }
+      }
+
+      // 1. Process Bulk Upserts (Prefer: resolution=merge-duplicates)
+      if (upsertItems.length > 0) {
+        try {
+          // Collapse multiple updates for same recordId to latest payload
+          const collapsedMap = new Map<string, { payload: any; itemIds: string[] }>();
+          for (const it of upsertItems) {
+            let parsed = {};
+            try {
+              parsed = JSON.parse(it.payloadJson || '{}');
+            } catch {
+              parsed = {};
+            }
+            const existing = collapsedMap.get(it.recordId);
+            if (existing) {
+              existing.payload = { ...existing.payload, ...parsed };
+              existing.itemIds.push(it.id);
+            } else {
+              collapsedMap.set(it.recordId, { payload: parsed, itemIds: [it.id] });
+            }
+          }
+
+          const bulkPayload = Array.from(collapsedMap.values()).map((v) => v.payload);
+          const allItemIds = Array.from(collapsedMap.values()).flatMap((v) => v.itemIds);
+
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              apikey: this.config.supabaseAnonKey.trim(),
+              Authorization: `Bearer ${this.config.supabaseAnonKey.trim()}`,
+              'Content-Type': 'application/json',
+              Prefer: 'resolution=merge-duplicates',
+            },
+            body: JSON.stringify(bulkPayload),
+          });
+
+          if (res.ok) {
+            successfulIds.push(...allItemIds);
+          } else {
+            console.error(
+              `[CloudSync] Supabase bulk upsert failed for ${tableName}:`,
+              res.status,
+              res.statusText
+            );
+            failedIds.push(...allItemIds);
+          }
+        } catch (err) {
+          console.error(`[CloudSync] Error during Supabase bulk upsert for ${tableName}:`, err);
+          failedIds.push(...upsertItems.map((i) => i.id));
+        }
+      }
+
+      // 2. Process Bulk Deletes
+      if (deleteItems.length > 0) {
+        try {
+          const deleteRecordIds = deleteItems.map((d) => d.recordId);
+          const deleteItemIds = deleteItems.map((d) => d.id);
+          const deleteUrl = `${endpoint}?id=in.(${deleteRecordIds.map((id) => encodeURIComponent(id)).join(',')})`;
+
+          const res = await fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+              apikey: this.config.supabaseAnonKey.trim(),
+              Authorization: `Bearer ${this.config.supabaseAnonKey.trim()}`,
+            },
+          });
+
+          if (res.ok) {
+            successfulIds.push(...deleteItemIds);
+          } else {
+            console.error(`[CloudSync] Supabase bulk delete failed for ${tableName}:`, res.status);
+            failedIds.push(...deleteItemIds);
+          }
+        } catch (err) {
+          console.error(`[CloudSync] Error during Supabase bulk delete for ${tableName}:`, err);
+          failedIds.push(...deleteItems.map((i) => i.id));
+        }
+      }
+    }
+
+    return { successfulIds, failedIds };
   }
 
-  private async pushToGoogleWebhook(item: SyncOutboxRecord): Promise<boolean> {
-    if (!this.config.googleWebhookUrl) return false;
+  /**
+   * Batch push for Google Apps Script Webhook
+   */
+  private async pushToGoogleWebhookBatch(
+    items: SyncOutboxRecord[]
+  ): Promise<{ successfulIds: string[]; failedIds: string[] }> {
+    if (!this.config.googleWebhookUrl) {
+      return { successfulIds: [], failedIds: items.map((i) => i.id) };
+    }
 
     try {
+      const batchPayload = items.map((item) => ({
+        tableName: item.tableName,
+        action: item.action,
+        recordId: item.recordId,
+        data: JSON.parse(item.payloadJson || '{}'),
+        timestamp: item.timestamp,
+      }));
+
       await fetch(this.config.googleWebhookUrl.trim(), {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tableName: item.tableName,
-          action: item.action,
-          recordId: item.recordId,
-          data: JSON.parse(item.payloadJson || '{}'),
-          timestamp: item.timestamp,
+          batch: batchPayload,
+          count: batchPayload.length,
+          timestamp: Date.now(),
         }),
       });
-      return true;
+
+      return { successfulIds: items.map((i) => i.id), failedIds: [] };
     } catch (e) {
-      console.error('[CloudSync] Google Webhook push error:', e);
-      return false;
+      console.error('[CloudSync] Google Webhook batch push error:', e);
+      return { successfulIds: [], failedIds: items.map((i) => i.id) };
     }
   }
 
   /**
-   * Pull changes from Supabase tables to local IndexedDB
+   * Push a single mutation to cloud provider (backward compatible)
    */
-  public async pullAllFromSupabase(): Promise<{ totalPulled: number; errors: number }> {
+  public async pushMutation(item: SyncOutboxRecord): Promise<boolean> {
+    const result = await this.pushBatch([item]);
+    return result.successfulIds.length > 0;
+  }
+
+  /**
+   * Pull changes from Supabase tables to local IndexedDB
+   * Features:
+   * 1. Silent Pull Guard: Disables Dexie mutation hooks during bulkPut to prevent infinite echo loops.
+   * 2. High-Water Mark (Delta Sync): Only pulls records modified after lastSyncTimestamp.
+   * 3. Covers all 10 domain tables.
+   */
+  public async pullAllFromSupabase(
+    forceFullSync: boolean = false
+  ): Promise<{ totalPulled: number; errors: number }> {
     if (!this.config.supabaseUrl || !this.config.supabaseAnonKey) {
       return { totalPulled: 0, errors: 0 };
     }
 
-    const tables = ['siswa', 'pegawai', 'sarpras', 'jurnalKinerja', 'bukuTamu', 'arsipDigital'];
     const cleanUrl = this.config.supabaseUrl.trim().replace(/\/+$/, '');
     let totalPulled = 0;
     let errors = 0;
 
-    for (const table of tables) {
-      try {
-        const endpoint = `${cleanUrl}/rest/v1/${table}?select=*`;
-        const res = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'apikey': this.config.supabaseAnonKey.trim(),
-            'Authorization': `Bearer ${this.config.supabaseAnonKey.trim()}`,
-          },
-        });
+    // Enable Silent Pull Guard to ensure local IndexedDB hooks do not echo mutations to outbox
+    db.isSyncPulling = true;
 
-        if (res.ok) {
-          const records = await res.json();
-          if (Array.isArray(records) && records.length > 0) {
-            const localTable = (db as any)[table];
-            if (localTable) {
-              await localTable.bulkPut(records);
-              totalPulled += records.length;
+    try {
+      const lastSync = this.config.lastSyncTimestamp;
+      const useDelta = !forceFullSync && lastSync !== null && Date.now() - lastSync < 30 * 24 * 3600 * 1000;
+      const lastSyncIso = lastSync ? new Date(lastSync).toISOString() : null;
+
+      for (const table of ALL_SYNC_TABLES) {
+        try {
+          let endpoint = `${cleanUrl}/rest/v1/${table}?select=*`;
+
+          // If incremental delta sync is active, query only updated records
+          if (useDelta && lastSyncIso) {
+            // Apply updatedAt delta filter if supported
+            if (['siswa', 'pegawai', 'sarpras', 'jurnalKinerja'].includes(table)) {
+              endpoint += `&updatedAt=gt.${encodeURIComponent(lastSyncIso)}`;
             }
           }
+
+          const res = await fetch(endpoint, {
+            method: 'GET',
+            headers: {
+              apikey: this.config.supabaseAnonKey.trim(),
+              Authorization: `Bearer ${this.config.supabaseAnonKey.trim()}`,
+            },
+          });
+
+          if (res.ok) {
+            const records = await res.json();
+            if (Array.isArray(records) && records.length > 0) {
+              const localTable = (db as any)[table];
+              if (localTable) {
+                await localTable.bulkPut(records);
+                totalPulled += records.length;
+              }
+            }
+          } else if (res.status !== 404) {
+            errors++;
+            console.warn(`[CloudSync] Supabase pull warning for ${table}:`, res.status);
+          }
+        } catch (err) {
+          errors++;
+          console.warn(`[CloudSync] Error pulling table ${table}:`, err);
         }
-      } catch (err) {
-        errors++;
-        console.warn(`[CloudSync] Error pulling table ${table}:`, err);
       }
+
+      this.saveConfig({ lastSyncTimestamp: Date.now() });
+    } finally {
+      // Always reset the Silent Pull Guard
+      db.isSyncPulling = false;
     }
 
-    this.saveConfig({ lastSyncTimestamp: Date.now() });
     return { totalPulled, errors };
   }
 
@@ -382,6 +515,59 @@ CREATE TABLE IF NOT EXISTS public."arsipDigital" (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 7. Tabel Akun Pengguna (RBAC Auth)
+CREATE TABLE IF NOT EXISTS public.users (
+    id TEXT PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    role TEXT NOT NULL,
+    "pinCode" TEXT NOT NULL,
+    "namaLengkap" TEXT NOT NULL,
+    "nipNuptk" TEXT,
+    "pegawaiId" TEXT,
+    "lastLogin" TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 8. Tabel Rombongan Belajar (Rombel Kelas 1-6)
+CREATE TABLE IF NOT EXISTS public."kelasRombel" (
+    id TEXT PRIMARY KEY,
+    tingkat INTEGER NOT NULL,
+    "namaRombel" TEXT NOT NULL,
+    fase TEXT NOT NULL,
+    "tahunAjaran" TEXT NOT NULL,
+    "waliKelasId" TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. Tabel Mutasi & Alumni Siswa
+CREATE TABLE IF NOT EXISTS public."mutasiSiswa" (
+    id TEXT PRIMARY KEY,
+    "siswaId" TEXT NOT NULL,
+    "namaSiswa" TEXT NOT NULL,
+    nisn TEXT NOT NULL,
+    "jenisMutasi" TEXT NOT NULL,
+    "tanggalMutasi" TEXT NOT NULL,
+    "sekolahAsalTujuan" TEXT,
+    alasan TEXT,
+    "noSurat" TEXT,
+    "syncStatus" TEXT DEFAULT 'synced',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 10. Tabel Beban Ajar Guru (24 JJM Target)
+CREATE TABLE IF NOT EXISTS public."bebanAjar" (
+    id TEXT PRIMARY KEY,
+    "pegawaiId" TEXT NOT NULL,
+    "rombelId" TEXT NOT NULL,
+    "mataPelajaran" TEXT NOT NULL,
+    "jumlahJamMinggu" INTEGER NOT NULL,
+    "hariMengajar" TEXT,
+    "jamMulaiSelesai" TEXT,
+    "syncStatus" TEXT DEFAULT 'synced',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security (RLS) & Public Access untuk Anon Key (SD Intranet)
 ALTER TABLE public.siswa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pegawai ENABLE ROW LEVEL SECURITY;
@@ -389,6 +575,10 @@ ALTER TABLE public.sarpras ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."jurnalKinerja" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."bukuTamu" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."arsipDigital" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."kelasRombel" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."mutasiSiswa" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."bebanAjar" ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read-write for anon" ON public.siswa FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read-write for anon" ON public.pegawai FOR ALL USING (true) WITH CHECK (true);
@@ -396,6 +586,10 @@ CREATE POLICY "Allow public read-write for anon" ON public.sarpras FOR ALL USING
 CREATE POLICY "Allow public read-write for anon" ON public."jurnalKinerja" FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read-write for anon" ON public."bukuTamu" FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read-write for anon" ON public."arsipDigital" FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read-write for anon" ON public.users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read-write for anon" ON public."kelasRombel" FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read-write for anon" ON public."mutasiSiswa" FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read-write for anon" ON public."bebanAjar" FOR ALL USING (true) WITH CHECK (true);
 `;
   }
 
@@ -456,7 +650,7 @@ function doPost(e) {
     const tableNames = [
       'users',
       'pegawai',
-      'rombel',
+      'kelasRombel',
       'siswa',
       'mutasiSiswa',
       'bebanAjar',
@@ -496,13 +690,19 @@ function doPost(e) {
     }
 
     let restoredCount = 0;
-    for (const [tableName, records] of Object.entries(data.tables)) {
-      const table = (db as any)[tableName];
-      if (table && Array.isArray(records)) {
-        await table.clear();
-        await table.bulkAdd(records);
-        restoredCount += records.length;
+    db.isSyncPulling = true;
+    try {
+      for (const [rawTableName, records] of Object.entries(data.tables)) {
+        const tableName = rawTableName === 'rombel' ? 'kelasRombel' : rawTableName;
+        const table = (db as any)[tableName];
+        if (table && Array.isArray(records)) {
+          await table.clear();
+          await table.bulkAdd(records);
+          restoredCount += records.length;
+        }
       }
+    } finally {
+      db.isSyncPulling = false;
     }
 
     return { restoredCount };
