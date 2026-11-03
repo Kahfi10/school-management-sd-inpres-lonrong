@@ -22,7 +22,14 @@ import { db } from '../db/local_db';
 // ----------------------------------------------------------------------------
 // 1. CRYPTOGRAPHIC PASSWORD HASHING (PBKDF2 / SHA-256 via Web Crypto API)
 // ----------------------------------------------------------------------------
+const passwordHashCache = new Map<string, string>();
+
 export async function hashPassword(password: string, salt: string = 'sd_inpres_lonrong_salt_2026'): Promise<string> {
+  const cacheKey = `${password}:${salt}`;
+  if (passwordHashCache.has(cacheKey)) {
+    return passwordHashCache.get(cacheKey)!;
+  }
+
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
@@ -47,7 +54,15 @@ export async function hashPassword(password: string, salt: string = 'sd_inpres_l
 
   const rawKey = await crypto.subtle.exportKey('raw', key);
   const hashArray = Array.from(new Uint8Array(rawKey));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  const result = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+
+  if (passwordHashCache.size > 100) {
+    const firstKey = passwordHashCache.keys().next().value;
+    if (firstKey) passwordHashCache.delete(firstKey);
+  }
+  passwordHashCache.set(cacheKey, result);
+
+  return result;
 }
 
 export async function verifyPasswordHash(password: string, expectedHash: string, salt?: string): Promise<boolean> {

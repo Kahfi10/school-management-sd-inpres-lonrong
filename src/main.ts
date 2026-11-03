@@ -17,6 +17,7 @@ import { showAlert, showConfirmDialog } from './utils/apple_alerts';
 import type { UserAccount } from './db/local_db';
 
 let currentNav = 'dashboard';
+let navTransitionTimer: any = null;
 
 const navTitles: Record<string, string> = {
   dashboard: 'Dashboard Informasi Sekolah',
@@ -205,7 +206,8 @@ function navigateTo(navKey: string) {
 
   // 3. Render actual view with smooth fade-in after a comfortable transition duration
   const targetNav = navKey;
-  setTimeout(async () => {
+  if (navTransitionTimer) clearTimeout(navTransitionTimer);
+  navTransitionTimer = setTimeout(async () => {
     if (currentNav !== targetNav) return;
 
     switch (targetNav) {
@@ -297,6 +299,18 @@ function setupSyncTelemetry() {
       // Avoid interrupting the user if an interactive modal dialog is currently open
       const activeModal = document.querySelector('.modal-backdrop.active');
       if (activeModal) return;
+
+      // Avoid interrupting user keystrokes if an input, select, or textarea is focused
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.tagName === 'SELECT' ||
+          (activeEl as HTMLElement).isContentEditable)
+      ) {
+        return;
+      }
 
       const viewContent = document.getElementById('appViewContent');
       if (!viewContent) return;
