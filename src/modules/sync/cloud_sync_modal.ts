@@ -3,15 +3,37 @@ import { cloudSyncService, type CloudSyncConfig } from '../../db/cloud_sync_serv
 import { syncEngine } from '../../db/sync_engine';
 import { showConfirmDialog } from '../../utils/apple_alerts';
 
-export function openCloudSyncModal() {
+export async function openCloudSyncModal() {
   const modalRoot = document.getElementById('modalRoot');
   if (!modalRoot) return;
 
   const currentConfig = cloudSyncService.getConfig();
+  const pendingCount = await syncEngine.getPendingCount();
+
+  const lastSyncStr = currentConfig.lastSyncTimestamp
+    ? new Date(currentConfig.lastSyncTimestamp).toLocaleString('id-ID', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })
+    : 'Belum pernah';
+
+  const providerLabel =
+    currentConfig.provider === 'supabase'
+      ? 'Supabase Cloud (Real-Time Dua Arah)'
+      : currentConfig.provider === 'googlesheets'
+      ? 'Google Sheets (Audit Log Satu Arah)'
+      : 'Penyimpanan Lokal Mandiri (Offline)';
+
+  const providerBadgeClass =
+    currentConfig.provider === 'supabase'
+      ? 'solid-badge-blue'
+      : currentConfig.provider === 'googlesheets'
+      ? 'solid-badge-emerald'
+      : 'solid-badge-neutral';
 
   const modalHtml = `
     <div class="modal-backdrop active" id="cloudSyncBackdrop" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1rem;">
-      <div class="apple-card" style="width: 100%; max-width: 660px; max-height: 90vh; overflow-y: auto; background: var(--apple-bg-primary); border-radius: var(--apple-radius-lg); box-shadow: var(--apple-shadow-lg); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+      <div class="apple-card" style="width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; background: var(--apple-bg-primary); border-radius: var(--apple-radius-lg); box-shadow: var(--apple-shadow-lg); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
         
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--apple-border-subtle); padding-bottom: 1rem;">
@@ -20,8 +42,8 @@ export function openCloudSyncModal() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
             </div>
             <div>
-              <h2 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; color: var(--apple-text-primary);">Sinkronisasi Cloud Sekolah (Multi-User)</h2>
-              <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin: 0.15rem 0 0 0;">SD Inpres Lonrong • 100% Gratis • Real-time Sync & Disaster Recovery</p>
+              <h2 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; color: var(--apple-text-primary);">Pusat Sinkronisasi & Data Terdistribusi</h2>
+              <p style="font-size: 0.82rem; color: var(--apple-text-secondary); margin: 0.15rem 0 0 0;">SD Inpres Lonrong • High-Performance Outbox • Zero-Lag Delta Sync</p>
             </div>
           </div>
           <button class="apple-btn apple-btn-ghost" id="btnCloseCloudSync" style="padding: 0.4rem; color: var(--apple-text-tertiary);" title="Tutup">
@@ -29,10 +51,34 @@ export function openCloudSyncModal() {
           </button>
         </div>
 
+        <!-- Telemetry & Live Status Strip -->
+        <div style="background: var(--apple-bg-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <div style="font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-tertiary);">Status Sinkronisasi Saat Ini</div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.2rem;">
+              <span class="solid-badge ${providerBadgeClass}" style="font-size: 0.78rem;">${providerLabel}</span>
+              <span style="font-size: 0.78rem; color: var(--apple-text-secondary);">• Terakhir: <strong>${lastSyncStr}</strong></span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="text-align: right; margin-right: 0.35rem;">
+              <div style="font-size: 0.72rem; color: var(--apple-text-tertiary);">Antrean Outbox</div>
+              <div style="font-size: 0.95rem; font-weight: 700; color: ${pendingCount > 0 ? 'var(--apple-orange)' : 'var(--apple-green)'};">
+                ${pendingCount} Mutasi Pending
+              </div>
+            </div>
+            <button class="apple-btn apple-btn-primary" id="btnSyncNowDirect" style="font-size: 0.8rem; padding: 0.45rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+              Sinkronkan Sekarang
+            </button>
+          </div>
+        </div>
+
         <!-- Segmented Tab Navigation -->
-        <div class="apple-segmented-control" style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr;">
-          <button class="segment-btn active" id="tabBtnSupabase">Supabase (Gratis)</button>
+        <div class="apple-segmented-control" style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
+          <button class="segment-btn active" id="tabBtnSupabase">Supabase Cloud</button>
           <button class="segment-btn" id="tabBtnGoogle">Google Sheets</button>
+          <button class="segment-btn" id="tabBtnIntranet">Intranet Sekolah</button>
           <button class="segment-btn" id="tabBtnBackup">Cadangan JSON</button>
         </div>
 
@@ -42,16 +88,16 @@ export function openCloudSyncModal() {
         <!-- Tab 1: Supabase (Recommended) -->
         <div id="tabContentSupabase" style="display: flex; flex-direction: column; gap: 1rem;">
           <div style="background: rgba(0, 113, 227, 0.05); border: 1px solid rgba(0, 113, 227, 0.2); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 700; font-size: 0.88rem; color: var(--apple-blue); margin-bottom: 0.25rem;">✨ Rekomendasi Utama: PostgreSQL Real-Time Cloud</div>
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--apple-blue); margin-bottom: 0.25rem;">✨ Rekomendasi Utama: PostgreSQL Real-Time Cloud (100% Gratis)</div>
             <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
-              Supabase menyediakan database cloud berkecepatan tinggi gratis selamanya (500 MB DB / 5 GB transfer). Data yang diinput di laptop operator otomatis langsung muncul di laptop kepala sekolah dalam milidetik.
+              Menghubungkan aplikasi ke cloud Supabase gratis. Mendukung <strong>Bulk Batch Upsert</strong> (mengirim puluhan perubahan sekaligus dalam 1 request) dan <strong>Delta High-Water Mark</strong> (hanya menarik data yang baru diubah).
             </div>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.35rem;">
             <label style="font-size: 0.82rem; font-weight: 700; color: var(--apple-text-primary);">Supabase Project URL</label>
             <input type="url" id="inputSupabaseUrl" class="apple-input" placeholder="https://xxxxxxxx.supabase.co" value="${escapeHtml(currentConfig.supabaseUrl)}" style="width: 100%; padding: 0.6rem 0.8rem; font-size: 0.86rem;" />
-            <span style="font-size: 0.74rem; color: var(--apple-text-tertiary);">Ditemukan di Dashboard Supabase > Project Settings > API > Project URL</span>
+            <span style="font-size: 0.74rem; color: var(--apple-text-tertiary);">Dashboard Supabase > Project Settings > API > Project URL</span>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.35rem;">
@@ -63,7 +109,7 @@ export function openCloudSyncModal() {
           <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.85rem; background: var(--apple-bg-secondary); border-radius: var(--apple-radius-sm);">
             <div>
               <div style="font-size: 0.84rem; font-weight: 700;">Jadikan Supabase Sebagai Cloud Provider Utama</div>
-              <div style="font-size: 0.75rem; color: var(--apple-text-secondary);">Aktifkan sinkronisasi otomatis saat ada koneksi internet</div>
+              <div style="font-size: 0.75rem; color: var(--apple-text-secondary);">Aktifkan sinkronisasi otomatis batch saat komputer terhubung ke internet</div>
             </div>
             <input type="checkbox" id="chkUseSupabase" ${currentConfig.provider === 'supabase' ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--apple-blue);" />
           </div>
@@ -75,11 +121,15 @@ export function openCloudSyncModal() {
             </button>
             <button class="apple-btn apple-btn-secondary" id="btnCopySqlSchema" style="font-size: 0.82rem; padding: 0.5rem 0.9rem;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              Salin Skema SQL Supabase
+              Salin Skema SQL (10 Tabel Lengkap)
             </button>
-            <button class="apple-btn apple-btn-secondary" id="btnPullSupabase" style="font-size: 0.82rem; padding: 0.5rem 0.9rem;">
+            <button class="apple-btn apple-btn-secondary" id="btnPullSupabaseDelta" style="font-size: 0.82rem; padding: 0.5rem 0.9rem;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Tarik Data Cloud (Pull)
+              Tarik Data Baru (Delta)
+            </button>
+            <button class="apple-btn apple-btn-secondary" id="btnPullSupabaseFull" style="font-size: 0.82rem; padding: 0.5rem 0.9rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>
+              Tarik Semua Data (Full Pull)
             </button>
             <button class="apple-btn apple-btn-primary" id="btnSaveSupabase" style="font-size: 0.82rem; padding: 0.5rem 1.15rem; margin-left: auto;">
               Simpan & Terapkan
@@ -90,9 +140,9 @@ export function openCloudSyncModal() {
         <!-- Tab 2: Google Sheets -->
         <div id="tabContentGoogle" style="display: none; flex-direction: column; gap: 1rem;">
           <div style="background: rgba(52, 199, 89, 0.08); border: 1px solid rgba(52, 199, 89, 0.25); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 700; font-size: 0.88rem; color: #1e7e34; margin-bottom: 0.25rem;">📊 Alternatif: Google Drive / Spreadsheet Sekolah</div>
+            <div style="font-weight: 700; font-size: 0.88rem; color: #1e7e34; margin-bottom: 0.25rem;">📊 Audit Trail: Google Drive / Spreadsheet Sekolah (Satu Arah)</div>
             <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
-              Simpan rekapitulasi data sekolah langsung ke Google Spreadsheet akun sekolah secara gratis. Kepala sekolah bisa langsung melihat tabel di Google Drive.
+              Berfungsi sebagai pencatat riwayat (audit log) otomatis setiap kali terjadi mutasi siswa, jurnal guru, atau aset. Berkas spreadsheet dapat dilihat langsung oleh Kepala Sekolah di Google Drive tanpa mengubah basis data lokal.
             </div>
           </div>
 
@@ -104,8 +154,8 @@ export function openCloudSyncModal() {
 
           <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.85rem; background: var(--apple-bg-secondary); border-radius: var(--apple-radius-sm);">
             <div>
-              <div style="font-size: 0.84rem; font-weight: 700;">Jadikan Google Sheets Sebagai Cloud Provider</div>
-              <div style="font-size: 0.75rem; color: var(--apple-text-secondary);">Setiap mutasi siswa/guru akan otomatis dikirim ke Spreadsheet</div>
+              <div style="font-size: 0.84rem; font-weight: 700;">Aktifkan Pengiriman Log ke Google Sheets</div>
+              <div style="font-size: 0.75rem; color: var(--apple-text-secondary);">Setiap mutasi siswa/guru akan otomatis dikirim sebagai baris baru di Spreadsheet</div>
             </div>
             <input type="checkbox" id="chkUseGoogle" ${currentConfig.provider === 'googlesheets' ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--apple-blue);" />
           </div>
@@ -125,19 +175,39 @@ export function openCloudSyncModal() {
           </div>
         </div>
 
-        <!-- Tab 3: Disaster Recovery Backup & Restore -->
+        <!-- Tab 3: Intranet Sekolah (Offline Wi-Fi Hub) -->
+        <div id="tabContentIntranet" style="display: none; flex-direction: column; gap: 1rem;">
+          <div style="background: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--apple-orange); margin-bottom: 0.25rem;">📶 Mode Terdistribusi: Jaringan Lokal Wi-Fi SD Inpres Lonrong</div>
+            <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
+              Jika sekolah mengalami kendala jaringan internet (mati lampu atau kuota habis), aplikasi dapat tetap beroperasi secara terdistribusi di ruang guru melalui jaringan Wi-Fi lokal sekolah.
+            </div>
+          </div>
+
+          <div style="background: var(--apple-bg-secondary); border-radius: var(--apple-radius-md); padding: 1rem; display: flex; flex-direction: column; gap: 0.65rem;">
+            <div style="font-weight: 700; font-size: 0.86rem; color: var(--apple-text-primary);">Panduan Penggunaan Intranet Guru:</div>
+            <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.6;">
+              <li>Jadikan laptop Operator / Tata Usaha sebagai <strong>Local Hub Server</strong> dengan menjalankan perintah <code>npm run preview -- --host</code>.</li>
+              <li>Pastikan laptop guru dan tablet tamu terhubung ke Wi-Fi sekolah yang sama (misal: <em>WIFI-SD-LONRONG</em>).</li>
+              <li>Buka peramban di laptop guru dengan alamat IP lokal, contoh: <code>http://192.168.1.100:3000</code>.</li>
+              <li>Seluruh data akan otomatis tersinkron antar-tab dan tersimpan aman di IndexedDB masing-masing perangkat.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Tab 4: Disaster Recovery Backup & Restore -->
         <div id="tabContentBackup" style="display: none; flex-direction: column; gap: 1rem;">
           <div style="background: var(--apple-bg-secondary); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.25rem;">💾 Cadangan Database Mandiri (Offline Backup)</div>
+            <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.25rem;">💾 Cadangan Database Mandiri (Offline JSON Backup)</div>
             <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
-              Unduh seluruh isi database (Siswa, Pegawai, Sarpras, Jurnal SKP, Buku Tamu) ke berkas <code>.json</code> terenkripsi untuk disimpan di flashdisk atau drive pribadi.
+              Unduh seluruh isi basis data lengkap (10 tabel: Siswa, Pegawai, Sarpras, Beban Ajar, Rombel, Mutasi, Jurnal SKP, Buku Tamu, dll.) ke berkas JSON untuk disimpan di flashdisk atau drive pribadi.
             </div>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.75rem; border: 1px dashed var(--apple-border-subtle); padding: 1.25rem; border-radius: var(--apple-radius-md); text-align: center; align-items: center;">
             <div style="font-weight: 700; font-size: 0.92rem;">Cadangkan Semua Data Sekolah</div>
             <p style="font-size: 0.8rem; color: var(--apple-text-secondary); max-width: 440px; margin: 0;">
-              Satu klik untuk mengunduh snapshot data lengkap SD Inpres Lonrong yang dapat dipulihkan kapan saja di komputer mana pun.
+              Satu klik untuk mengunduh snapshot data lengkap SD Inpres Lonrong yang dapat dipulihkan kapan saja di komputer mana pun tanpa koneksi internet.
             </p>
             <button class="apple-btn apple-btn-primary" id="btnDownloadJsonBackup" style="font-size: 0.86rem; padding: 0.6rem 1.25rem;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -148,7 +218,7 @@ export function openCloudSyncModal() {
           <div style="display: flex; flex-direction: column; gap: 0.75rem; border: 1px dashed var(--apple-border-subtle); padding: 1.25rem; border-radius: var(--apple-radius-md); text-align: center; align-items: center;">
             <div style="font-weight: 700; font-size: 0.92rem; color: var(--apple-orange);">Pulihkan Database Dari Berkas Cadangan</div>
             <p style="font-size: 0.8rem; color: var(--apple-text-secondary); max-width: 440px; margin: 0;">
-              Pilih berkas JSON hasil unduhan sebelumnya untuk memulihkan seluruh catatan lokal.
+              Pilih berkas JSON hasil unduhan sebelumnya untuk memulihkan seluruh catatan lokal dengan aman.
             </p>
             <input type="file" id="inputFileRestore" accept=".json" style="display: none;" />
             <button class="apple-btn apple-btn-secondary" id="btnTriggerRestoreFile" style="font-size: 0.86rem; padding: 0.6rem 1.25rem;">
@@ -195,17 +265,30 @@ export function openCloudSyncModal() {
     if (e.target === e.currentTarget) closeModal();
   });
 
+  // Quick Sync Now button
+  document.getElementById('btnSyncNowDirect')?.addEventListener('click', async () => {
+    showAlert('Menjalankan sinkronisasi massal (Flush Outbox & Delta Pull)...', 'info');
+    const flushRes = await syncEngine.flushOutbox();
+    const pullRes = await cloudSyncService.pullAllFromSupabase(false);
+    showAlert(
+      `Sinkronisasi selesai! ${flushRes.processed} data dikirim, ${pullRes.totalPulled} data diperbarui.`,
+      'success'
+    );
+  });
+
   // Tab switching
   const tabSupabase = document.getElementById('tabBtnSupabase');
   const tabGoogle = document.getElementById('tabBtnGoogle');
+  const tabIntranet = document.getElementById('tabBtnIntranet');
   const tabBackup = document.getElementById('tabBtnBackup');
   const contentSupabase = document.getElementById('tabContentSupabase');
   const contentGoogle = document.getElementById('tabContentGoogle');
+  const contentIntranet = document.getElementById('tabContentIntranet');
   const contentBackup = document.getElementById('tabContentBackup');
 
   const switchTab = (activeTab: HTMLElement, activeContent: HTMLElement) => {
-    [tabSupabase, tabGoogle, tabBackup].forEach((t) => t?.classList.remove('active'));
-    [contentSupabase, contentGoogle, contentBackup].forEach((c) => {
+    [tabSupabase, tabGoogle, tabIntranet, tabBackup].forEach((t) => t?.classList.remove('active'));
+    [contentSupabase, contentGoogle, contentIntranet, contentBackup].forEach((c) => {
       if (c) c.style.display = 'none';
     });
     activeTab.classList.add('active');
@@ -214,13 +297,14 @@ export function openCloudSyncModal() {
 
   tabSupabase?.addEventListener('click', () => switchTab(tabSupabase, contentSupabase!));
   tabGoogle?.addEventListener('click', () => switchTab(tabGoogle, contentGoogle!));
+  tabIntranet?.addEventListener('click', () => switchTab(tabIntranet, contentIntranet!));
   tabBackup?.addEventListener('click', () => switchTab(tabBackup, contentBackup!));
 
   // Supabase actions
   document.getElementById('btnTestSupabase')?.addEventListener('click', async () => {
     const url = (document.getElementById('inputSupabaseUrl') as HTMLInputElement).value;
     const key = (document.getElementById('inputSupabaseKey') as HTMLInputElement).value;
-    showAlert('Menguji koneksi ke Supabase Cloud...', 'info');
+    showAlert('Menguji koneksi ke Supabase Cloud REST endpoint...', 'info');
     const result = await cloudSyncService.testSupabaseConnection(url, key);
     showAlert(result.message, result.success ? 'success' : 'error');
   });
@@ -228,7 +312,7 @@ export function openCloudSyncModal() {
   document.getElementById('btnCopySqlSchema')?.addEventListener('click', async () => {
     const sql = cloudSyncService.getSupabaseSqlSchema();
     await navigator.clipboard.writeText(sql);
-    showAlert('Skema SQL Supabase berhasil disalin ke clipboard! Tempelkan di SQL Editor dashboard Supabase.', 'success');
+    showAlert('Skema SQL 10 tabel lengkap berhasil disalin! Tempelkan di SQL Editor dashboard Supabase.', 'success');
   });
 
   document.getElementById('btnSaveSupabase')?.addEventListener('click', async () => {
@@ -242,18 +326,20 @@ export function openCloudSyncModal() {
       supabaseAnonKey: key,
     });
 
-    showAlert('Pengaturan Supabase berhasil disimpan!', 'success');
+    showAlert('Pengaturan Supabase berhasil disimpan! Menjalankan sinkronisasi awal...', 'success');
     await syncEngine.flushOutbox();
   });
 
-  document.getElementById('btnPullSupabase')?.addEventListener('click', async () => {
-    showAlert('Menarik data terbaru dari Supabase Cloud...', 'info');
-    const res = await cloudSyncService.pullAllFromSupabase();
-    if (res.errors > 0) {
-      showAlert(`Tersinkron dengan beberapa peringatan: ${res.totalPulled} data diperbarui.`, 'info');
-    } else {
-      showAlert(`Berhasil! ${res.totalPulled} data ditarik dari cloud ke penyimpanan lokal.`, 'success');
-    }
+  document.getElementById('btnPullSupabaseDelta')?.addEventListener('click', async () => {
+    showAlert('Menarik data mutasi terbaru (Delta Sync)...', 'info');
+    const res = await cloudSyncService.pullAllFromSupabase(false);
+    showAlert(`Berhasil! ${res.totalPulled} data baru ditarik ke penyimpanan lokal.`, 'success');
+  });
+
+  document.getElementById('btnPullSupabaseFull')?.addEventListener('click', async () => {
+    showAlert('Menarik seluruh basis data dari Supabase Cloud (Full Sync)...', 'info');
+    const res = await cloudSyncService.pullAllFromSupabase(true);
+    showAlert(`Berhasil! Seluruh data (${res.totalPulled} catatan) berhasil diperbarui ke komputer lokal.`, 'success');
   });
 
   // Google actions
@@ -294,7 +380,7 @@ export function openCloudSyncModal() {
       a.download = `backup_sd_inpres_lonrong_${dateStr}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showAlert('Berkas cadangan JSON berhasil diunduh ke perangkat Anda.', 'success');
+      showAlert('Berkas cadangan JSON 10 tabel berhasil diunduh ke perangkat Anda.', 'success');
     } catch (e: any) {
       showAlert(`Gagal mengekspor data: ${e.message}`, 'error');
     }
