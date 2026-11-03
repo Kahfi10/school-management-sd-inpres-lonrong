@@ -143,6 +143,14 @@ export interface BukuTamuRecord {
   syncStatus: 'synced' | 'pending';
 }
 
+export interface MediaBlobRecord {
+  id: string;
+  recordId: string;
+  mimeType: string;
+  dataBase64: string;
+  createdAt: string;
+}
+
 export interface SyncOutboxRecord {
   id: string;
   tableName: string;
@@ -184,6 +192,7 @@ export class LonrongDatabase extends Dexie {
   jurnalKinerja!: EntityTable<JurnalKinerjaRecord, 'id'>;
   bukuTamu!: EntityTable<BukuTamuRecord, 'id'>;
   syncOutbox!: EntityTable<SyncOutboxRecord, 'id'>;
+  mediaBlobs!: EntityTable<MediaBlobRecord, 'id'>;
 
   public isSeeding = false;
   public isSyncPulling = false;
@@ -202,6 +211,21 @@ export class LonrongDatabase extends Dexie {
       jurnalKinerja: 'id, pegawaiId, tanggal, statusVerifikasi, syncStatus',
       bukuTamu: 'id, tanggalKunjungan, namaTamu, kategoriTamu, syncStatus',
       syncOutbox: 'id, tableName, recordId, action, status, timestamp',
+    });
+
+    this.version(2).stores({
+      users: 'id, username, role, pinCode',
+      pegawai: 'id, nipNuptk, namaLengkap, jabatan, statusKepegawaian, syncStatus, updatedAt',
+      kelasRombel: 'id, tingkat, namaRombel, fase',
+      siswa: 'id, [statusSiswa+tingkatKelas], nisn, nik, namaLengkap, rombelId, tingkatKelas, statusSiswa, syncStatus, updatedAt',
+      mutasiSiswa: 'id, siswaId, jenisMutasi, tanggalMutasi, syncStatus',
+      bebanAjar: 'id, pegawaiId, rombelId, mataPelajaran, syncStatus',
+      arsipDigital: 'id, pegawaiId, kategori, driveFileId, syncStatus',
+      sarpras: 'id, kodeAset, kategoriKib, namaBarang, kondisi, lokasiRuang, syncStatus, updatedAt',
+      jurnalKinerja: 'id, pegawaiId, tanggal, statusVerifikasi, syncStatus, updatedAt',
+      bukuTamu: 'id, tanggalKunjungan, namaTamu, kategoriTamu, syncStatus',
+      syncOutbox: 'id, tableName, recordId, action, status, timestamp',
+      mediaBlobs: 'id, recordId, mimeType, createdAt',
     });
 
     this.setupAutoSyncHooks();

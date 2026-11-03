@@ -309,7 +309,20 @@ export async function renderBukuTamuView(container: HTMLElement) {
         };
 
         await db.bukuTamu.add(newTamu);
-        await syncEngine.queueMutation('bukuTamu', newTamu.id, 'create', newTamu);
+
+        if (ttdData) {
+          try {
+            await db.mediaBlobs.put({
+              id: `blob_${newTamu.id}`,
+              recordId: newTamu.id,
+              mimeType: 'image/png',
+              dataBase64: ttdData,
+              createdAt: now.toISOString(),
+            });
+          } catch (blobErr) {
+            console.warn('[BukuTamu] Failed to store signature blob in mediaBlobs:', blobErr);
+          }
+        }
 
         showAlert({
           title: 'Kunjungan Dicatat',
