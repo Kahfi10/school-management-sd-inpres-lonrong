@@ -6,6 +6,8 @@ import { showAlert } from '../../utils/apple_alerts';
 
 export async function renderBukuTamuView(container: HTMLElement) {
   let isKioskMode = false;
+  let currentPage = 1;
+  const pageSize = 15;
 
   async function loadData() {
     return await db.bukuTamu.reverse().toArray();
@@ -24,6 +26,14 @@ export async function renderBukuTamuView(container: HTMLElement) {
     const pengawasCount = list.filter((b) => b.kategoriTamu === 'Pengawas Sekolah').length;
     const waliCount = list.filter((b) => b.kategoriTamu === 'Wali Murid').length;
     const umumCount = list.length - (dinasCount + pengawasCount + waliCount);
+
+    const totalItems = list.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedList = list.slice(startIndex, startIndex + pageSize);
 
     container.innerHTML = `
       <div class="page-container">
@@ -102,7 +112,7 @@ export async function renderBukuTamuView(container: HTMLElement) {
                     </td>
                   </tr>
                 `
-                    : list
+                    : paginatedList
                         .map(
                           (b) => `
                   <tr>
@@ -157,9 +167,45 @@ export async function renderBukuTamuView(container: HTMLElement) {
               </tbody>
             </table>
           </div>
+
+          <!-- Pagination Controls -->
+          ${
+            totalPages > 1
+              ? `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.15rem; border-top: 1px solid var(--apple-border-subtle); font-size: 0.8rem; color: var(--apple-text-secondary); flex-wrap: wrap; gap: 0.5rem;">
+              <div>Menampilkan <strong>${startIndex + 1} - ${Math.min(startIndex + pageSize, totalItems)}</strong> dari <strong>${totalItems}</strong> kunjungan</div>
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <button class="apple-btn apple-btn-secondary" id="btnTamuPrev" ${currentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">
+                  ‹ Sebelumnya
+                </button>
+                <span style="font-weight: 600; color: var(--apple-text-primary); padding: 0 0.4rem;">
+                  Halaman ${currentPage} / ${totalPages}
+                </span>
+                <button class="apple-btn apple-btn-secondary" id="btnTamuNext" ${currentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">
+                  Berikutnya ›
+                </button>
+              </div>
+            </div>
+          `
+              : ''
+          }
         </div>
       </div>
     `;
+
+    container.querySelector('#btnTamuPrev')?.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderContent();
+      }
+    });
+
+    container.querySelector('#btnTamuNext')?.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderContent();
+      }
+    });
 
     container.querySelector('#btnLaunchKiosk')?.addEventListener('click', () => {
       isKioskMode = true;

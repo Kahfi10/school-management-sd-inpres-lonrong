@@ -10,22 +10,34 @@ export async function renderSiswaView(container: HTMLElement) {
   let currentFilter = 'aktif';
   let currentClassFilter: number | null = null;
   let searchQuery = '';
+  let currentPage = 1;
+  const pageSize = 20;
 
   async function loadData() {
-    let query = db.siswa.toCollection();
+    let list: SiswaRecord[];
 
-    if (currentFilter === 'aktif') {
-      query = db.siswa.where('statusSiswa').equals('aktif');
-    } else if (currentFilter === 'lulus') {
-      query = db.siswa.where('statusSiswa').equals('lulus');
-    } else if (currentFilter === 'mutasi_keluar') {
-      query = db.siswa.where('statusSiswa').equals('mutasi_keluar');
-    }
-
-    let list = await query.toArray();
-
+    // High-performance compound index query: [statusSiswa+tingkatKelas]
     if (currentClassFilter !== null && currentFilter === 'aktif') {
-      list = list.filter((s) => s.tingkatKelas === currentClassFilter);
+      try {
+        list = await db.siswa
+          .where('[statusSiswa+tingkatKelas]')
+          .equals(['aktif', currentClassFilter])
+          .toArray();
+      } catch {
+        list = await db.siswa
+          .where('statusSiswa')
+          .equals('aktif')
+          .filter((s) => s.tingkatKelas === currentClassFilter)
+          .toArray();
+      }
+    } else if (currentFilter === 'aktif') {
+      list = await db.siswa.where('statusSiswa').equals('aktif').toArray();
+    } else if (currentFilter === 'lulus') {
+      list = await db.siswa.where('statusSiswa').equals('lulus').toArray();
+    } else if (currentFilter === 'mutasi_keluar') {
+      list = await db.siswa.where('statusSiswa').equals('mutasi_keluar').toArray();
+    } else {
+      list = await db.siswa.toArray();
     }
 
     if (searchQuery.trim()) {
@@ -46,14 +58,23 @@ export async function renderSiswaView(container: HTMLElement) {
     const list = await loadData();
     const tableBody = container.querySelector('#siswaTableBody') as HTMLElement;
     const totalCountEl = container.querySelector('#totalSiswaCount') as HTMLElement;
+    const paginationContainer = container.querySelector('#siswaPaginationContainer') as HTMLElement;
+
+    const totalItems = list.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedList = list.slice(startIndex, startIndex + pageSize);
 
     if (totalCountEl) {
-      totalCountEl.textContent = `${list.length} Siswa Terdaftar`;
+      totalCountEl.textContent = `${totalItems} Siswa Terdaftar`;
     }
 
     if (!tableBody) return;
 
-    if (list.length === 0) {
+    if (totalItems === 0) {
       tableBody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--apple-text-tertiary);">
@@ -65,14 +86,15 @@ export async function renderSiswaView(container: HTMLElement) {
           </td>
         </tr>
       `;
+      if (paginationContainer) paginationContainer.innerHTML = '';
       return;
     }
 
-    tableBody.innerHTML = list
+    tableBody.innerHTML = paginatedList
       .map(
         (s, idx) => `
       <tr>
-        <td style="font-weight: 600; color: var(--apple-text-tertiary); width: 36px;">${idx + 1}</td>
+        <td style="font-weight: 600; color: var(--apple-text-tertiary); width: 36px;">${startIndex + idx + 1}</td>
         <td>
           <div style="font-weight: 700; color: var(--apple-text-primary); font-size: 0.94rem;">${s.namaLengkap}</div>
           <div style="font-size: 0.78rem; color: var(--apple-text-tertiary); font-family: var(--font-family-mono); margin-top: 2px;">
@@ -114,6 +136,43 @@ export async function renderSiswaView(container: HTMLElement) {
       )
       .join('');
 
+    // Render Pagination Controls
+    if (paginationContainer) {
+      const endItem = Math.min(startIndex + pageSize, totalItems);
+      paginationContainer.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.15rem; border-top: 1px solid var(--apple-border-subtle); flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem; color: var(--apple-text-secondary);">
+          <div>
+            Menampilkan <strong>${startIndex + 1} - ${endItem}</strong> dari <strong>${totalItems}</strong> peserta didik
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <button class="apple-btn apple-btn-secondary" id="btnPagePrev" ${currentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">
+              ‹ Sebelumnya
+            </button>
+            <span style="padding: 0.3rem 0.65rem; font-weight: 600; color: var(--apple-text-primary);">
+              Halaman ${currentPage} / ${totalPages}
+            </span>
+            <button class="apple-btn apple-btn-secondary" id="btnPageNext" ${currentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">
+              Berikutnya ›
+            </button>
+          </div>
+        </div>
+      `;
+
+      paginationContainer.querySelector('#btnPagePrev')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      });
+
+      paginationContainer.querySelector('#btnPageNext')?.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      });
+    }
+
     // Attach row events
     container.querySelectorAll('.btn-action-mutasi').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -134,7 +193,6 @@ export async function renderSiswaView(container: HTMLElement) {
         });
         if (confirmed) {
           await db.siswa.delete(id);
-          await syncEngine.queueMutation('siswa', id, 'delete', { id });
           showAlert({ title: 'Data Dihapus', message: 'Data siswa telah berhasil dihapus dari sistem.', type: 'info' });
           renderTable();
         }
@@ -243,6 +301,7 @@ export async function renderSiswaView(container: HTMLElement) {
             <tbody id="siswaTableBody"></tbody>
           </table>
         </div>
+        <div id="siswaPaginationContainer"></div>
       </div>
     </div>
 
@@ -428,6 +487,7 @@ export async function renderSiswaView(container: HTMLElement) {
       container.querySelectorAll('#statusFilterControl .segment-btn').forEach((b) => b.classList.remove('active'));
       (e.currentTarget as HTMLElement).classList.add('active');
       currentFilter = (e.currentTarget as HTMLElement).dataset.filter || 'aktif';
+      currentPage = 1;
       renderTable();
     });
   });
@@ -438,15 +498,21 @@ export async function renderSiswaView(container: HTMLElement) {
       (e.currentTarget as HTMLElement).classList.add('active');
       const val = (e.currentTarget as HTMLElement).dataset.class;
       currentClassFilter = val === 'all' ? null : parseInt(val || '1');
+      currentPage = 1;
       renderTable();
     });
   });
 
-  // Search input
+  // Debounced search input
+  let searchTimer: any = null;
   const searchInput = container.querySelector('#inputSearchSiswa') as HTMLInputElement;
   searchInput?.addEventListener('input', () => {
-    searchQuery = searchInput.value;
-    renderTable();
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      searchQuery = searchInput.value;
+      currentPage = 1;
+      renderTable();
+    }, 180);
   });
 
   // Modals management

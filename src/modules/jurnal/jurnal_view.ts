@@ -8,6 +8,9 @@ import { applyAutoTable, exportDocToPdf } from '../../utils/export_helper';
 export async function renderJurnalView(container: HTMLElement) {
   const currentUser = authService.getCurrentUser();
   const isAdmin = currentUser?.role === 'admin';
+  let currentStatusFilter = 'semua';
+  let currentPage = 1;
+  const pageSize = 8;
 
   async function loadData() {
     let list = await db.jurnalKinerja.reverse().toArray();
@@ -20,7 +23,22 @@ export async function renderJurnalView(container: HTMLElement) {
 
     const disetujuiCount = list.filter((j) => j.statusVerifikasi === 'disetujui').length;
     const diajukanCount = list.filter((j) => j.statusVerifikasi === 'diajukan').length;
+    const revisiCount = list.filter((j) => j.statusVerifikasi === 'revisi').length;
     const contributorCount = new Set(list.map((j) => j.pegawaiId)).size;
+
+    // Filter by status
+    const filteredList =
+      currentStatusFilter === 'semua'
+        ? list
+        : list.filter((j) => j.statusVerifikasi === currentStatusFilter);
+
+    const totalItems = filteredList.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedList = filteredList.slice(startIndex, startIndex + pageSize);
 
     container.innerHTML = `
       <div class="page-container">
@@ -72,20 +90,33 @@ export async function renderJurnalView(container: HTMLElement) {
           </div>
         </div>
 
+        <!-- Filter Segmented Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.15rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div class="apple-segmented-control" id="jurnalStatusFilter">
+            <button class="segment-btn ${currentStatusFilter === 'semua' ? 'active' : ''}" data-status="semua">Semua (${list.length})</button>
+            <button class="segment-btn ${currentStatusFilter === 'diajukan' ? 'active' : ''}" data-status="diajukan">Perlu Verifikasi (${diajukanCount})</button>
+            <button class="segment-btn ${currentStatusFilter === 'disetujui' ? 'active' : ''}" data-status="disetujui">Disetujui (${disetujuiCount})</button>
+            <button class="segment-btn ${currentStatusFilter === 'revisi' ? 'active' : ''}" data-status="revisi">Revisi (${revisiCount})</button>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--apple-text-secondary);">
+            Menampilkan <strong>${totalItems > 0 ? startIndex + 1 : 0} - ${Math.min(startIndex + pageSize, totalItems)}</strong> dari <strong>${totalItems}</strong> jurnal
+          </div>
+        </div>
+
         <!-- Jurnal List Cards (Balanced Grid & Enhanced Typography) -->
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 1.35rem;">
           ${
-            list.length === 0
+            totalItems === 0
               ? `
             <div class="bento-card" style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1rem; color: var(--apple-text-tertiary);">
               <div style="width: 44px; height: 44px; margin: 0 auto 0.75rem auto; border-radius: 50%; background: var(--apple-surface-tertiary); display: flex; align-items: center; justify-content: center; color: var(--apple-text-tertiary);">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
               </div>
-              <div style="font-weight: 700; color: var(--apple-text-primary); font-size: 1rem;">Belum Ada Catatan Jurnal Kinerja</div>
-              <div style="font-size: 0.82rem; margin-top: 0.25rem;">Klik "Tulis Jurnal Harian" untuk memulai pencatatan aktivitas hari ini.</div>
+              <div style="font-weight: 700; color: var(--apple-text-primary); font-size: 1rem;">Tidak Ada Catatan Jurnal</div>
+              <div style="font-size: 0.82rem; margin-top: 0.25rem;">Tidak ditemukan aktivitas pada kategori status ini.</div>
             </div>
           `
-              : list
+              : paginatedList
                   .map((j) => {
                     const statusClass =
                       j.statusVerifikasi === 'disetujui'
@@ -206,6 +237,25 @@ export async function renderJurnalView(container: HTMLElement) {
                   .join('')
           }
         </div>
+
+        <!-- Jurnal Pagination Footer -->
+        ${
+          totalPages > 1
+            ? `
+          <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem;">
+            <button class="apple-btn apple-btn-secondary" id="btnJurnalPrev" ${currentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+              ‹ Sebelumnya
+            </button>
+            <span style="font-size: 0.82rem; font-weight: 600; color: var(--apple-text-secondary); padding: 0 0.5rem;">
+              Halaman ${currentPage} dari ${totalPages}
+            </span>
+            <button class="apple-btn apple-btn-secondary" id="btnJurnalNext" ${currentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+              Berikutnya ›
+            </button>
+          </div>
+        `
+            : ''
+        }
       </div>
 
       <!-- Modal Tulis Jurnal Harian -->
@@ -270,6 +320,33 @@ export async function renderJurnalView(container: HTMLElement) {
     container.querySelector('#btnTulisJurnal')?.addEventListener('click', () => modal.classList.add('active'));
     container.querySelectorAll('.btn-close-modal').forEach((btn) => btn.addEventListener('click', () => modal.classList.remove('active')));
 
+    // Status filter tabs
+    container.querySelectorAll('#jurnalStatusFilter .segment-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const val = (e.currentTarget as HTMLElement).dataset.status;
+        if (val) {
+          currentStatusFilter = val;
+          currentPage = 1;
+          renderContent();
+        }
+      });
+    });
+
+    // Pagination buttons
+    container.querySelector('#btnJurnalPrev')?.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderContent();
+      }
+    });
+
+    container.querySelector('#btnJurnalNext')?.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderContent();
+      }
+    });
+
     // Form Submit
     const form = container.querySelector('#formTulisJurnal') as HTMLFormElement;
     form?.addEventListener('submit', async (e) => {
@@ -295,7 +372,6 @@ export async function renderJurnalView(container: HTMLElement) {
       };
 
       await db.jurnalKinerja.add(newJurnal);
-      await syncEngine.queueMutation('jurnalKinerja', newJurnal.id, 'create', newJurnal);
       modal.classList.remove('active');
       renderContent();
     });
@@ -310,7 +386,6 @@ export async function renderJurnalView(container: HTMLElement) {
             catatanEvaluasi: 'Disetujui Kepala Sekolah untuk bukti dukung E-Kinerja BKN.',
             updatedAt: new Date().toISOString(),
           });
-          await syncEngine.queueMutation('jurnalKinerja', id, 'update', { statusVerifikasi: 'disetujui' });
           renderContent();
         }
       });
