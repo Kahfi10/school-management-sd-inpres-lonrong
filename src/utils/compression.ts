@@ -10,7 +10,7 @@ export async function compressGzip(rawString: string): Promise<Uint8Array> {
   if (typeof CompressionStream !== 'undefined') {
     const cs = new CompressionStream('gzip');
     const writer = cs.writable.getWriter();
-    writer.write(byteArray);
+    writer.write(byteArray as any);
     writer.close();
 
     const outputChunks: Uint8Array[] = [];
@@ -41,7 +41,7 @@ export async function decompressGzip(compressedBytes: Uint8Array): Promise<strin
     try {
       const ds = new DecompressionStream('gzip');
       const writer = ds.writable.getWriter();
-      writer.write(compressedBytes);
+      writer.write(compressedBytes as any);
       writer.close();
 
       const outputChunks: Uint8Array[] = [];

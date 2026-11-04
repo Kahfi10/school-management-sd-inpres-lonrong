@@ -44,10 +44,10 @@ export function mergeFieldLevel<T extends Record<string, any>>(
   }
 
   // Deterministic timestamp resolution
-  const localTime = new Date(localRecord.updatedAt || 0).getTime();
-  const remoteTime = new Date(remoteRecord.updatedAt || 0).getTime();
+  const localTime = new Date((localRecord as any).updatedAt || 0).getTime();
+  const remoteTime = new Date((remoteRecord as any).updatedAt || 0).getTime();
   if (localTime > remoteTime) {
-    merged.updatedAt = localRecord.updatedAt;
+    (merged as any).updatedAt = (localRecord as any).updatedAt;
   }
 
   return { merged, conflictsResolved, hasLocalModifications };

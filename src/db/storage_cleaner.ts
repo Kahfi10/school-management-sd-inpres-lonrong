@@ -28,16 +28,16 @@ export class StorageCleaner {
     const activeIds = new Set<string>();
 
     try {
-      // 1. Scan Buku Tamu signatures
+      // 1. Scan Buku Tamu active record IDs
       const tamuList = await db.bukuTamu.toArray();
       for (const t of tamuList) {
-        if (t.tandaTanganBlobId) activeIds.add(t.tandaTanganBlobId);
+        if (t.id) activeIds.add(t.id);
       }
 
-      // 2. Scan Arsip Digital if referenced
+      // 2. Scan Arsip Digital active record IDs
       const arsipList = await db.arsipDigital.toArray();
       for (const a of arsipList) {
-        if ((a as any).blobId) activeIds.add((a as any).blobId);
+        if (a.id) activeIds.add(a.id);
       }
     } catch (err) {
       console.warn('[StorageCleaner] Error reading active records:', err);
@@ -58,9 +58,10 @@ export class StorageCleaner {
     let bytesFreed = 0;
 
     for (const blob of allBlobs) {
-      if (!activeIds.has(blob.id)) {
+      // Check if the blob's associated parent record still exists
+      if (!activeIds.has(blob.recordId) && !activeIds.has(blob.id)) {
         orphanedIds.push(blob.id);
-        bytesFreed += (blob.base64Data?.length || 0);
+        bytesFreed += (blob.dataBase64?.length || 0);
       }
     }
 
