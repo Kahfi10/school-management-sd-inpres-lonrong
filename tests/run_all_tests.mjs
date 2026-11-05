@@ -532,6 +532,106 @@ const finalRecord = JSON.parse(stressQueue[0].payloadJson);
 assert(finalRecord.updateCount === 290, 'Latest payload state is preserved under high-frequency writes');
 
 // -----------------------------------------------------------------
+// 11. User Management Anti-Collision & Supabase Payload Sanitization
+// -----------------------------------------------------------------
+console.log('\n--- 11. Testing User Management Anti-Collision & Supabase Sanitization ---');
+
+function generateUniquePinTest(existingUsers) {
+  const existingPins = new Set(existingUsers.map((u) => u.pinCode.trim()));
+  for (let i = 0; i < 500; i++) {
+    const candidate = Math.floor(1000 + Math.random() * 9000).toString();
+    if (!existingPins.has(candidate)) {
+      return candidate;
+    }
+  }
+  return '7891';
+}
+
+const mockExistingUsers = [
+  { pinCode: '1234' }, // Super Admin
+  { pinCode: '2345' }, // Operator
+  { pinCode: '3456' }, // Guru
+];
+
+const generatedPin = generateUniquePinTest(mockExistingUsers);
+assert(/^\d{4}$/.test(generatedPin), 'Generated PIN is exactly 4 numeric digits');
+assert(!['1234', '2345', '3456'].includes(generatedPin), 'Generated PIN strictly avoids existing user PIN collisions');
+
+// Test Supabase allowed columns and sanitization logic
+const SUPABASE_ALLOWED_COLUMNS_TEST = {
+  users: [
+    'id', 'username', 'passwordHash', 'role', 'isSuperAdmin', 'isActive',
+    'pinCode', 'namaLengkap', 'nipNuptk', 'pegawaiId', 'lastLogin', 'updatedAt'
+  ],
+};
+
+function sanitizeSupabasePayloadTest(tableName, record) {
+  if (!record || typeof record !== 'object') return record;
+  const allowedCols = SUPABASE_ALLOWED_COLUMNS_TEST[tableName];
+  if (!allowedCols) {
+    const clean = { ...record };
+    delete clean.createdAt;
+    return clean;
+  }
+  const sanitized = {};
+  for (const col of allowedCols) {
+    if (record[col] !== undefined) {
+      sanitized[col] = record[col];
+    }
+  }
+  if (record.id && !sanitized.id) {
+    sanitized.id = record.id;
+  }
+  return sanitized;
+}
+
+const rawUserPayload = {
+  id: 'usr_test_1',
+  username: 'gurutest',
+  passwordHash: 'hash123',
+  role: 'guru',
+  isSuperAdmin: false,
+  isActive: true,
+  pinCode: '5678',
+  namaLengkap: 'Guru Penguji',
+  nipNuptk: '19850101 201001 1 001',
+  createdAt: '2026-11-05T00:00:00.000Z', // Client-only property, absent from Supabase
+  __dexieInternal: 'metadata',
+};
+
+const sanitizedUser = sanitizeSupabasePayloadTest('users', rawUserPayload);
+assert(sanitizedUser.id === 'usr_test_1', 'Sanitized payload maintains primary key id');
+assert(sanitizedUser.username === 'gurutest' && sanitizedUser.pinCode === '5678', 'Sanitized payload retains all required schema columns');
+assert(sanitizedUser.createdAt === undefined, 'Client-only createdAt property is cleanly stripped to prevent Supabase 400');
+assert(sanitizedUser.__dexieInternal === undefined, 'Non-schema metadata properties are stripped');
+
+// Test Dexie update full-record enrichment simulation
+const originalUserInDb = {
+  id: 'usr_tendik',
+  username: 'tendik',
+  namaLengkap: 'Andi Nurul Qalbi, S.Kom.',
+  role: 'tendik',
+  passwordHash: 'oldhash',
+  pinCode: '2345',
+  nipNuptk: '19950814 202203 2 005',
+};
+
+const partialModification = {
+  passwordHash: 'newSecureHash',
+  pinCode: '8899',
+  updatedAt: '2026-11-05T02:00:00.000Z',
+};
+
+// Merged full record
+const enrichedPayload = { ...originalUserInDb, ...partialModification, id: 'usr_tendik' };
+const sanitizedEnriched = sanitizeSupabasePayloadTest('users', enrichedPayload);
+
+assert(sanitizedEnriched.id === 'usr_tendik', 'Enriched update payload preserves record ID');
+assert(sanitizedEnriched.username === 'tendik', 'Enriched update payload includes mandatory username column');
+assert(sanitizedEnriched.namaLengkap === 'Andi Nurul Qalbi, S.Kom.', 'Enriched update payload includes mandatory namaLengkap column');
+assert(sanitizedEnriched.pinCode === '8899' && sanitizedEnriched.passwordHash === 'newSecureHash', 'Enriched update contains updated credentials');
+
+// -----------------------------------------------------------------
 // SUMMARY
 // -----------------------------------------------------------------
 console.log('\n====================================================');

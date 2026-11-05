@@ -260,7 +260,10 @@ export class AuthService {
     }
 
     const hashed = await hashPassword(newPassword);
-    const updates: Partial<UserAccount> = { passwordHash: hashed };
+    const updates: Partial<UserAccount> = {
+      passwordHash: hashed,
+      updatedAt: new Date().toISOString(),
+    };
     if (newPin && /^\d{4}$/.test(newPin)) {
       updates.pinCode = newPin;
     }

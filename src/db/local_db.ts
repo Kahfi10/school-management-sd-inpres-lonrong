@@ -313,9 +313,18 @@ export class LonrongDatabase extends Dexie {
         if (this.isSeeding || this.isSyncPulling) return;
         this.invalidateQueryCache();
         const recordId = String(primKey || obj?.id || '');
-        setTimeout(() => {
+        setTimeout(async () => {
           if (dbMutationHandler) {
-            dbMutationHandler(tableName, 'update', recordId, modifications);
+            let fullUpdatedRecord = null;
+            try {
+              fullUpdatedRecord = await table.get(recordId);
+            } catch {
+              // fallback
+            }
+            if (!fullUpdatedRecord) {
+              fullUpdatedRecord = { ...obj, ...modifications, id: recordId };
+            }
+            dbMutationHandler(tableName, 'update', recordId, fullUpdatedRecord);
           }
         }, 30);
       });

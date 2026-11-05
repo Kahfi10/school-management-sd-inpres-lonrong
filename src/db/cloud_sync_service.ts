@@ -26,6 +26,166 @@ export const ALL_SYNC_TABLES = [
 
 export type SyncTableName = (typeof ALL_SYNC_TABLES)[number];
 
+export const SUPABASE_ALLOWED_COLUMNS: Record<string, readonly string[]> = {
+  users: [
+    'id',
+    'username',
+    'passwordHash',
+    'role',
+    'isSuperAdmin',
+    'isActive',
+    'pinCode',
+    'namaLengkap',
+    'nipNuptk',
+    'pegawaiId',
+    'lastLogin',
+    'updatedAt',
+  ],
+  pegawai: [
+    'id',
+    'nipNuptk',
+    'namaLengkap',
+    'jenisKelamin',
+    'jabatan',
+    'statusKepegawaian',
+    'pangkatGolongan',
+    'email',
+    'noHp',
+    'googleDriveFolderId',
+    'syncStatus',
+    'updatedAt',
+  ],
+  kelasRombel: [
+    'id',
+    'tingkat',
+    'namaRombel',
+    'fase',
+    'tahunAjaran',
+    'waliKelasId',
+  ],
+  siswa: [
+    'id',
+    'nisn',
+    'nik',
+    'namaLengkap',
+    'jenisKelamin',
+    'tempatLahir',
+    'tanggalLahir',
+    'namaIbu',
+    'namaAyah',
+    'alamat',
+    'rombelId',
+    'tingkatKelas',
+    'statusSiswa',
+    'tahunMasuk',
+    'tahunLulus',
+    'syncStatus',
+    'updatedAt',
+  ],
+  mutasiSiswa: [
+    'id',
+    'siswaId',
+    'namaSiswa',
+    'nisn',
+    'jenisMutasi',
+    'tanggalMutasi',
+    'sekolahAsalTujuan',
+    'alasan',
+    'noSurat',
+    'syncStatus',
+  ],
+  bebanAjar: [
+    'id',
+    'pegawaiId',
+    'rombelId',
+    'mataPelajaran',
+    'jumlahJamMinggu',
+    'hariMengajar',
+    'jamMulaiSelesai',
+    'syncStatus',
+  ],
+  arsipDigital: [
+    'id',
+    'pegawaiId',
+    'namaPegawai',
+    'kategori',
+    'judulDokumen',
+    'nomorSurat',
+    'driveFileId',
+    'driveWebUrl',
+    'fileSizeBytes',
+    'fileMimeType',
+    'uploadedAt',
+    'syncStatus',
+  ],
+  sarpras: [
+    'id',
+    'kodeAset',
+    'kategoriKib',
+    'namaBarang',
+    'merkTipe',
+    'jumlahUnit',
+    'satuan',
+    'kondisi',
+    'lokasiRuang',
+    'tahunPengadaan',
+    'sumberDana',
+    'qrCodeData',
+    'syncStatus',
+    'updatedAt',
+  ],
+  jurnalKinerja: [
+    'id',
+    'pegawaiId',
+    'namaPegawai',
+    'tanggal',
+    'jamMulai',
+    'jamSelesai',
+    'uraianAktivitas',
+    'outputHasil',
+    'tautanBuktiDrive',
+    'statusVerifikasi',
+    'catatanEvaluasi',
+    'syncStatus',
+    'updatedAt',
+  ],
+  bukuTamu: [
+    'id',
+    'tanggalKunjungan',
+    'jamKunjungan',
+    'namaTamu',
+    'instansiAsal',
+    'kategoriTamu',
+    'noWhatsapp',
+    'tujuanKunjungan',
+    'pegawaiDituju',
+    'tandaTanganBase64',
+    'fotoSelfieUrl',
+    'syncStatus',
+  ],
+};
+
+export function sanitizeSupabasePayload(tableName: string, record: any): any {
+  if (!record || typeof record !== 'object') return record;
+  const allowedCols = SUPABASE_ALLOWED_COLUMNS[tableName];
+  if (!allowedCols) {
+    const clean = { ...record };
+    delete clean.createdAt;
+    return clean;
+  }
+
+  const sanitized: Record<string, any> = {};
+  for (const col of allowedCols) {
+    if (record[col] !== undefined) {
+      sanitized[col] = record[col];
+    }
+  }
+  if (record.id && !sanitized.id) {
+    sanitized.id = record.id;
+  }
+  return sanitized;
+}
+
 const CONFIG_STORAGE_KEY = 'lonrong_cloud_sync_config_v1';
 
 export class CloudSyncService {
@@ -249,6 +409,25 @@ export class CloudSyncService {
             }
           }
 
+          // Defensive payload enrichment & schema sanitization
+          const localTable = (db as any)[tableName];
+          for (const [recId, entry] of collapsedMap.entries()) {
+            if (localTable) {
+              try {
+                const localRec = await localTable.get(recId);
+                if (localRec) {
+                  entry.payload = { ...localRec, ...entry.payload, id: recId };
+                }
+              } catch {
+                // Ignore local read errors during enrichment
+              }
+            }
+            if (!entry.payload.id) {
+              entry.payload.id = recId;
+            }
+            entry.payload = sanitizeSupabasePayload(tableName, entry.payload);
+          }
+
           const bulkPayload = Array.from(collapsedMap.values()).map((v) => v.payload);
           const allItemIds = Array.from(collapsedMap.values()).flatMap((v) => v.itemIds);
 
@@ -264,10 +443,10 @@ export class CloudSyncService {
           if (res.ok) {
             successfulIds.push(...allItemIds);
           } else {
+            const errBody = await res.text().catch(() => '');
             console.error(
-              `[CloudSync] Supabase bulk upsert failed for ${tableName}:`,
-              res.status,
-              res.statusText
+              `[CloudSync] Supabase bulk upsert failed for ${tableName} (${res.status} ${res.statusText}):`,
+              errBody
             );
             failedIds.push(...allItemIds);
           }
