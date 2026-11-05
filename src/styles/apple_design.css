@@ -12,6 +12,16 @@
   --apple-surface-elevated: #FFFFFF;
   --apple-surface-tertiary: #F0F0F3;
 
+  /* Solid Surface Aliases (Strict Backward Compatibility) */
+  --apple-bg-primary: #FFFFFF;
+  --apple-bg-secondary: #FAFAFC;
+  --apple-bg-tertiary: #F0F0F3;
+  --apple-radius-xs: var(--radius-xs);
+  --apple-radius-sm: var(--radius-sm);
+  --apple-radius-md: var(--radius-md);
+  --apple-radius-lg: var(--radius-lg);
+  --apple-radius-xl: var(--radius-xl);
+
   /* Solid Opaque Surfaces (Zero Gradients, Zero Blur Bleed) */
   --apple-glass: #FFFFFF;
   --apple-glass-heavy: #FFFFFF;
