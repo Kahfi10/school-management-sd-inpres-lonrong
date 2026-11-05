@@ -148,15 +148,25 @@ export async function openCloudSyncModal() {
 
             <!-- Manual Sync Actions Grid -->
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B;">Sinkronisasi Data Manual</div>
+              <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B;">Sinkronisasi Data Dua Arah</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                <button class="apple-btn apple-btn-secondary" id="btnPullSupabaseDelta" style="font-size: 0.82rem; padding: 0.65rem 0.9rem; justify-content: center; font-weight: 600; border-radius: 9px; display: inline-flex; align-items: center; gap: 0.45rem;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                  Tarik Data Baru (Delta)
+                <button class="apple-btn apple-btn-primary" id="btnPushSupabaseFull" style="font-size: 0.82rem; padding: 0.65rem 0.9rem; justify-content: center; font-weight: 600; border-radius: 9px; display: inline-flex; align-items: center; gap: 0.45rem; background: #0071E3; color: #FFFFFF;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                  Unggah Data Lokal ke Cloud (Full Push)
                 </button>
                 <button class="apple-btn apple-btn-secondary" id="btnPullSupabaseFull" style="font-size: 0.82rem; padding: 0.65rem 0.9rem; justify-content: center; font-weight: 600; border-radius: 9px; display: inline-flex; align-items: center; gap: 0.45rem;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>
-                  Tarik Semua Data (Full)
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                  Tarik Semua Data (Full Pull)
+                </button>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.2rem;">
+                <button class="apple-btn apple-btn-secondary" id="btnPullSupabaseDelta" style="font-size: 0.82rem; padding: 0.65rem 0.9rem; justify-content: center; font-weight: 600; border-radius: 9px; display: inline-flex; align-items: center; gap: 0.45rem;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Tarik Data Baru (Delta Sync)
+                </button>
+                <button class="apple-btn apple-btn-secondary" id="btnFlushOutboxManual" style="font-size: 0.82rem; padding: 0.65rem 0.9rem; justify-content: center; font-weight: 600; border-radius: 9px; display: inline-flex; align-items: center; gap: 0.45rem;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                  Kirim Antrean Outbox (Flush)
                 </button>
               </div>
             </div>
@@ -269,7 +279,7 @@ export async function openCloudSyncModal() {
   modalRoot.innerHTML = modalHtml;
 
   // Helpers
-  function showAlert(msg: string, type: 'success' | 'error' | 'info') {
+  function showAlert(msg: string, type: 'success' | 'error' | 'info' | 'warning') {
     const el = document.getElementById('syncFeedbackAlert');
     if (!el) return;
     el.style.display = 'block';
@@ -281,6 +291,10 @@ export async function openCloudSyncModal() {
       el.style.background = '#FEF2F2';
       el.style.color = '#B91C1C';
       el.style.border = '1px solid #FECACA';
+    } else if (type === 'warning') {
+      el.style.background = '#FFFBEB';
+      el.style.color = '#B45309';
+      el.style.border = '1px solid #FDE68A';
     } else {
       el.style.background = '#EFF6FF';
       el.style.color = '#1D4ED8';
@@ -325,11 +339,11 @@ export async function openCloudSyncModal() {
   // Quick Sync Now button
   document.getElementById('btnSyncNowDirect')?.addEventListener('click', async () => {
     showAlert('Menjalankan sinkronisasi massal (Flush Outbox & Delta Pull)...', 'info');
-    const flushRes = await syncEngine.flushOutbox();
+    const flushRes = await syncEngine.flushOutbox(true);
     const pullRes = await cloudSyncService.pullAllFromSupabase(false);
     showAlert(
       `Sinkronisasi selesai! ${flushRes.processed} data dikirim, ${pullRes.totalPulled} data diperbarui.`,
-      'success'
+      flushRes.errors === 0 && pullRes.errors === 0 ? 'success' : 'info'
     );
   });
 
@@ -405,6 +419,31 @@ export async function openCloudSyncModal() {
     const sql = cloudSyncService.getSupabaseSqlSchema();
     await navigator.clipboard.writeText(sql);
     showAlert('Skema SQL 10 tabel lengkap berhasil disalin! Tempelkan di SQL Editor dashboard Supabase.', 'success');
+  });
+
+  document.getElementById('btnPushSupabaseFull')?.addEventListener('click', async () => {
+    const ok = await showConfirmDialog({
+      title: 'Unggah Seluruh Data ke Cloud',
+      message: 'Sistem akan mengunggah seluruh basis data lokal sekolah (Siswa, Pegawai, Sarpras, Pengguna, dll.) ke Supabase Cloud. Lanjutkan proses ini?',
+      confirmText: 'Unggah ke Cloud',
+      cancelText: 'Batalkan',
+      type: 'info',
+    });
+    if (!ok) return;
+
+    showAlert('Mengunggah seluruh data lokal ke Supabase Cloud...', 'info');
+    const res = await cloudSyncService.uploadAllToSupabase();
+    if (res.errors === 0) {
+      showAlert(`Unggah berhasil! ${res.totalUploaded} data sekolah berhasil tersinkronkan ke Supabase Cloud.`, 'success');
+    } else {
+      showAlert(`Selesai: ${res.totalUploaded} data berhasil diunggah dengan ${res.errors} peringatan.`, 'warning');
+    }
+  });
+
+  document.getElementById('btnFlushOutboxManual')?.addEventListener('click', async () => {
+    showAlert('Mengirim antrean perubahan lokal (Outbox Flush)...', 'info');
+    const res = await syncEngine.flushOutbox(true);
+    showAlert(`Pengiriman selesai! ${res.processed} mutasi terkirim ke Supabase.`, res.errors === 0 ? 'success' : 'warning');
   });
 
   document.getElementById('btnPullSupabaseDelta')?.addEventListener('click', async () => {

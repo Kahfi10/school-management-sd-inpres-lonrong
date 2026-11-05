@@ -414,9 +414,20 @@ class RealTimeSyncEngine {
   /**
    * Process pending outbox mutations using high-efficiency batch requests
    */
-  public async flushOutbox(): Promise<{ processed: number; errors: number }> {
+  public async flushOutbox(retryFailed: boolean = true): Promise<{ processed: number; errors: number }> {
     if (this.isSyncing || !this.networkOnline) {
       return { processed: 0, errors: 0 };
+    }
+
+    if (retryFailed) {
+      try {
+        await db.syncOutbox
+          .where('status')
+          .equals('failed')
+          .modify({ status: 'pending', retryCount: 0 });
+      } catch {
+        // Ignored
+      }
     }
 
     this.isSyncing = true;

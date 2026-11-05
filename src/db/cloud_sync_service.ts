@@ -174,11 +174,10 @@ export function sanitizeSupabasePayload(tableName: string, record: any): any {
     return clean;
   }
 
+  // Normalize all keys across the batch so PostgREST never fails with PGRST102 ('All object keys must match')
   const sanitized: Record<string, any> = {};
   for (const col of allowedCols) {
-    if (record[col] !== undefined) {
-      sanitized[col] = record[col];
-    }
+    sanitized[col] = record[col] !== undefined ? record[col] : null;
   }
   if (record.id && !sanitized.id) {
     sanitized.id = record.id;
@@ -444,11 +443,32 @@ export class CloudSyncService {
             successfulIds.push(...allItemIds);
           } else {
             const errBody = await res.text().catch(() => '');
-            console.error(
-              `[CloudSync] Supabase bulk upsert failed for ${tableName} (${res.status} ${res.statusText}):`,
+            console.warn(
+              `[CloudSync] Supabase bulk upsert returned ${res.status} for ${tableName}, activating resilient single-record fallback:`,
               errBody
             );
-            failedIds.push(...allItemIds);
+            // Resilient single-record fallback so one invalid record never blocks the entire batch
+            for (const entry of collapsedMap.values()) {
+              try {
+                const singleRes = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: this.buildSupabaseHeaders(this.config.supabaseAnonKey, {
+                    'Content-Type': 'application/json',
+                    Prefer: 'resolution=merge-duplicates',
+                  }),
+                  body: JSON.stringify([entry.payload]),
+                });
+                if (singleRes.ok) {
+                  successfulIds.push(...entry.itemIds);
+                } else {
+                  const singleErr = await singleRes.text().catch(() => '');
+                  console.error(`[CloudSync] Single upsert failed for ${tableName} (${entry.payload.id}):`, singleErr);
+                  failedIds.push(...entry.itemIds);
+                }
+              } catch {
+                failedIds.push(...entry.itemIds);
+              }
+            }
           }
         } catch (err) {
           console.error(`[CloudSync] Error during Supabase bulk upsert for ${tableName}:`, err);
@@ -527,6 +547,91 @@ export class CloudSyncService {
   public async pushMutation(item: SyncOutboxRecord): Promise<boolean> {
     const result = await this.pushBatch([item]);
     return result.successfulIds.length > 0;
+  }
+
+  /**
+   * Upload all local records from IndexedDB to Supabase (Initial Full Push)
+   * Essential for synchronizing existing offline/seed data up to the cloud.
+   */
+  public async uploadAllToSupabase(): Promise<{
+    totalUploaded: number;
+    tableResults: Record<string, number>;
+    errors: number;
+  }> {
+    if (!this.config.supabaseUrl || !this.config.supabaseAnonKey) {
+      return { totalUploaded: 0, tableResults: {}, errors: 1 };
+    }
+
+    const cleanUrl = this.config.supabaseUrl.trim().replace(/\/+$/, '');
+    let totalUploaded = 0;
+    let errors = 0;
+    const tableResults: Record<string, number> = {};
+
+    for (const table of ALL_SYNC_TABLES) {
+      try {
+        const localTable = (db as any)[table];
+        if (!localTable) continue;
+
+        const records = await localTable.toArray();
+        if (records.length === 0) {
+          tableResults[table] = 0;
+          continue;
+        }
+
+        const chunkSize = 50;
+        let tableUploaded = 0;
+
+        for (let i = 0; i < records.length; i += chunkSize) {
+          const chunk = records.slice(i, i + chunkSize);
+          const sanitizedChunk = chunk.map((r: any) => sanitizeSupabasePayload(table, r));
+
+          const endpoint = `${cleanUrl}/rest/v1/${table}`;
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: this.buildSupabaseHeaders(this.config.supabaseAnonKey, {
+              'Content-Type': 'application/json',
+              Prefer: 'resolution=merge-duplicates',
+            }),
+            body: JSON.stringify(sanitizedChunk),
+          });
+
+          if (res.ok) {
+            tableUploaded += chunk.length;
+          } else {
+            console.warn(`[CloudSync] Full push batch failed for ${table}, attempting single-record upsert:`, res.status);
+            for (const item of sanitizedChunk) {
+              try {
+                const singleRes = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: this.buildSupabaseHeaders(this.config.supabaseAnonKey, {
+                    'Content-Type': 'application/json',
+                    Prefer: 'resolution=merge-duplicates',
+                  }),
+                  body: JSON.stringify([item]),
+                });
+                if (singleRes.ok) {
+                  tableUploaded++;
+                } else {
+                  errors++;
+                  console.error(`[CloudSync] Item upload failed for ${table} (${item.id}):`, await singleRes.text().catch(() => ''));
+                }
+              } catch {
+                errors++;
+              }
+            }
+          }
+        }
+
+        tableResults[table] = tableUploaded;
+        totalUploaded += tableUploaded;
+      } catch (err) {
+        errors++;
+        console.error(`[CloudSync] Error during uploadAllToSupabase for ${table}:`, err);
+      }
+    }
+
+    this.saveConfig({ lastSyncTimestamp: Date.now() });
+    return { totalUploaded, tableResults, errors };
   }
 
   /**

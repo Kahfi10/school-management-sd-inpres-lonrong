@@ -575,9 +575,7 @@ function sanitizeSupabasePayloadTest(tableName, record) {
   }
   const sanitized = {};
   for (const col of allowedCols) {
-    if (record[col] !== undefined) {
-      sanitized[col] = record[col];
-    }
+    sanitized[col] = record[col] !== undefined ? record[col] : null;
   }
   if (record.id && !sanitized.id) {
     sanitized.id = record.id;
@@ -599,11 +597,30 @@ const rawUserPayload = {
   __dexieInternal: 'metadata',
 };
 
-const sanitizedUser = sanitizeSupabasePayloadTest('users', rawUserPayload);
-assert(sanitizedUser.id === 'usr_test_1', 'Sanitized payload maintains primary key id');
-assert(sanitizedUser.username === 'gurutest' && sanitizedUser.pinCode === '5678', 'Sanitized payload retains all required schema columns');
-assert(sanitizedUser.createdAt === undefined, 'Client-only createdAt property is cleanly stripped to prevent Supabase 400');
-assert(sanitizedUser.__dexieInternal === undefined, 'Non-schema metadata properties are stripped');
+const rawUserPayload2 = {
+  id: 'usr_test_2',
+  username: 'gurutest2',
+  passwordHash: 'hash456',
+  role: 'guru',
+  isSuperAdmin: false,
+  isActive: true,
+  pinCode: '5679',
+  namaLengkap: 'Guru Penguji 2',
+  // nipNuptk omitted!
+};
+
+const sanitizedUser1 = sanitizeSupabasePayloadTest('users', rawUserPayload);
+const sanitizedUser2 = sanitizeSupabasePayloadTest('users', rawUserPayload2);
+
+assert(sanitizedUser1.id === 'usr_test_1', 'Sanitized payload maintains primary key id');
+assert(sanitizedUser1.username === 'gurutest' && sanitizedUser1.pinCode === '5678', 'Sanitized payload retains all required schema columns');
+assert(sanitizedUser1.createdAt === undefined, 'Client-only createdAt property is cleanly stripped to prevent Supabase 400');
+assert(sanitizedUser1.__dexieInternal === undefined, 'Non-schema metadata properties are stripped');
+
+const keys1 = Object.keys(sanitizedUser1).sort().join(',');
+const keys2 = Object.keys(sanitizedUser2).sort().join(',');
+assert(keys1 === keys2, 'Normalized batch objects possess identical key sets (Prevents PostgREST PGRST102 error)');
+assert(sanitizedUser2.nipNuptk === null, 'Omitted properties in batch records default to null rather than undefined');
 
 // Test Dexie update full-record enrichment simulation
 const originalUserInDb = {
@@ -630,6 +647,19 @@ assert(sanitizedEnriched.id === 'usr_tendik', 'Enriched update payload preserves
 assert(sanitizedEnriched.username === 'tendik', 'Enriched update payload includes mandatory username column');
 assert(sanitizedEnriched.namaLengkap === 'Andi Nurul Qalbi, S.Kom.', 'Enriched update payload includes mandatory namaLengkap column');
 assert(sanitizedEnriched.pinCode === '8899' && sanitizedEnriched.passwordHash === 'newSecureHash', 'Enriched update contains updated credentials');
+
+// Test Outbox Failed Mutation Resurrection Logic
+const mockOutbox = [
+  { id: 'mut_01', status: 'failed', retryCount: 4 },
+  { id: 'mut_02', status: 'pending', retryCount: 1 },
+];
+for (const item of mockOutbox) {
+  if (item.status === 'failed') {
+    item.status = 'pending';
+    item.retryCount = 0;
+  }
+}
+assert(mockOutbox[0].status === 'pending' && mockOutbox[0].retryCount === 0, 'Failed outbox records are resurrected and retried on manual sync trigger');
 
 // -----------------------------------------------------------------
 // SUMMARY

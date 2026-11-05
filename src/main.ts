@@ -1,5 +1,6 @@
 import { initializeDatabaseSeed } from './db/seed_data';
 import { syncEngine, type SyncTelemetry } from './db/sync_engine';
+import { cloudSyncService } from './db/cloud_sync_service';
 import { authService } from './modules/auth/auth_service';
 import { renderLoginModal } from './modules/auth/login_view';
 import { renderDashboardView } from './modules/dashboard/dashboard_view';
@@ -86,6 +87,14 @@ async function initApp() {
     authService.subscribe((user) => {
       updateUserInterface(user);
     });
+
+    // 7. Initial silent background sync on application startup
+    setTimeout(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        syncEngine.flushOutbox(true);
+        cloudSyncService.pullAllFromSupabase(false).catch(() => {});
+      }
+    }, 1500);
   } catch (err) {
     console.error('[Lonrong SmartEdu] Startup error:', err);
     updateSplashProgress(100, 'Sistem siap.');
