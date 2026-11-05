@@ -49,20 +49,30 @@ export class CloudSyncService {
   }
 
   private loadConfig(): CloudSyncConfig {
+    const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+    const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+    const envProvider = envUrl && envKey ? 'supabase' : 'none';
+
     try {
       const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          supabaseUrl: parsed.supabaseUrl || envUrl,
+          supabaseAnonKey: parsed.supabaseAnonKey || envKey,
+          provider: parsed.provider && parsed.provider !== 'none' ? parsed.provider : envProvider,
+        };
       }
     } catch (e) {
       console.warn('[CloudSync] Failed to parse stored config:', e);
     }
 
     return {
-      provider: 'none',
-      supabaseUrl: '',
-      supabaseAnonKey: '',
-      googleWebhookUrl: '',
+      provider: envProvider,
+      supabaseUrl: envUrl,
+      supabaseAnonKey: envKey,
+      googleWebhookUrl: (import.meta as any).env?.VITE_GOOGLE_SHEETS_WEBHOOK || '',
       lastSyncTimestamp: null,
       autoSyncEnabled: true,
     };
