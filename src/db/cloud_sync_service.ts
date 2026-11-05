@@ -49,8 +49,11 @@ export class CloudSyncService {
   }
 
   private loadConfig(): CloudSyncConfig {
-    const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-    const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+    const defaultUrl = 'https://ohqzmwdveugzqpzyvwye.supabase.co';
+    const defaultKey = 'sb_publishable_B4cB8w6LlyRqbvC90-XflA_4PVk7PsW';
+
+    const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || defaultUrl;
+    const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || defaultKey;
     const envProvider = envUrl && envKey ? 'supabase' : 'none';
 
     try {
@@ -104,7 +107,8 @@ export class CloudSyncService {
     }
 
     const cleanUrl = url.trim().replace(/\/+$/, '');
-    const endpoint = `${cleanUrl}/rest/v1/`;
+    // Query a specific table with limit 1, which works with both new publishable keys and legacy keys
+    const endpoint = `${cleanUrl}/rest/v1/siswa?select=id&limit=1`;
 
     try {
       const response = await fetch(endpoint, {
@@ -112,15 +116,20 @@ export class CloudSyncService {
         headers: this.buildSupabaseHeaders(key),
       });
 
-      if (response.ok || response.status === 200 || response.status === 404) {
+      if (response.ok || response.status === 200) {
         return {
           success: true,
-          message: 'Koneksi ke Supabase Cloud Berhasil! Endpoint REST aktif & siap digunakan.',
+          message: 'Koneksi ke Supabase Cloud Berhasil! Basis data terhubung dan siap digunakan.',
+        };
+      } else if (response.status === 404) {
+        return {
+          success: true,
+          message: 'Koneksi ke Supabase Berhasil! Namun tabel siswa belum ada. Silakan klik "Salin Skema SQL" dan jalankan di SQL Editor Supabase.',
         };
       } else {
         return {
           success: false,
-          message: `Gagal terhubung (${response.status}): ${response.statusText}. Pastikan URL & API Key benar.`,
+          message: `Gagal terhubung (${response.status}): ${response.statusText}. Pastikan Publishable Key benar.`,
         };
       }
     } catch (err: any) {
