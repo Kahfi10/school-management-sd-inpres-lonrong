@@ -79,6 +79,23 @@ export class CloudSyncService {
   }
 
   /**
+   * Build authentication headers compatible with both new (sb_publishable_...) and legacy (JWT eyJ...) Supabase keys
+   */
+  private buildSupabaseHeaders(key: string, extraHeaders: Record<string, string> = {}): Record<string, string> {
+    const cleanKey = key.trim();
+    const headers: Record<string, string> = {
+      apikey: cleanKey,
+      ...extraHeaders,
+    };
+    // Only attach Authorization: Bearer if the key is a legacy JWT (starts with eyJ)
+    // New Supabase publishable keys (sb_publishable_...) must NOT be sent in Authorization: Bearer
+    if (cleanKey.startsWith('eyJ')) {
+      headers['Authorization'] = `Bearer ${cleanKey}`;
+    }
+    return headers;
+  }
+
+  /**
    * Test connection to configured Supabase instance
    */
   public async testSupabaseConnection(url: string, key: string): Promise<{ success: boolean; message: string }> {
@@ -92,10 +109,7 @@ export class CloudSyncService {
     try {
       const response = await fetch(endpoint, {
         method: 'GET',
-        headers: {
-          'apikey': key.trim(),
-          'Authorization': `Bearer ${key.trim()}`,
-        },
+        headers: this.buildSupabaseHeaders(key),
       });
 
       if (response.ok || response.status === 200 || response.status === 404) {
@@ -231,12 +245,10 @@ export class CloudSyncService {
 
           const res = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-              apikey: this.config.supabaseAnonKey.trim(),
-              Authorization: `Bearer ${this.config.supabaseAnonKey.trim()}`,
+            headers: this.buildSupabaseHeaders(this.config.supabaseAnonKey, {
               'Content-Type': 'application/json',
               Prefer: 'resolution=merge-duplicates',
-            },
+            }),
             body: JSON.stringify(bulkPayload),
           });
 
@@ -265,10 +277,7 @@ export class CloudSyncService {
 
           const res = await fetch(deleteUrl, {
             method: 'DELETE',
-            headers: {
-              apikey: this.config.supabaseAnonKey.trim(),
-              Authorization: `Bearer ${this.config.supabaseAnonKey.trim()}`,
-            },
+            headers: this.buildSupabaseHeaders(this.config.supabaseAnonKey),
           });
 
           if (res.ok) {
@@ -372,10 +381,7 @@ export class CloudSyncService {
 
           const res = await fetch(endpoint, {
             method: 'GET',
-            headers: {
-              apikey: this.config.supabaseAnonKey.trim(),
-              Authorization: `Bearer ${this.config.supabaseAnonKey.trim()}`,
-            },
+            headers: this.buildSupabaseHeaders(this.config.supabaseAnonKey),
           });
 
           if (res.ok) {
