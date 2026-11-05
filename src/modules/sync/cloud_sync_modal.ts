@@ -88,7 +88,7 @@ export async function openCloudSyncModal() {
         <!-- Tab 1: Supabase (Recommended) -->
         <div id="tabContentSupabase" style="display: flex; flex-direction: column; gap: 1rem;">
           <div style="background: rgba(0, 113, 227, 0.05); border: 1px solid rgba(0, 113, 227, 0.2); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 700; font-size: 0.88rem; color: var(--apple-blue); margin-bottom: 0.25rem;">✨ Rekomendasi Utama: PostgreSQL Real-Time Cloud (100% Gratis)</div>
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--apple-blue); margin-bottom: 0.25rem;">Rekomendasi Utama: PostgreSQL Real-Time Cloud (100% Gratis)</div>
             <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
               Menghubungkan aplikasi ke cloud Supabase gratis. Mendukung <strong>Bulk Batch Upsert</strong> (mengirim puluhan perubahan sekaligus dalam 1 request) dan <strong>Delta High-Water Mark</strong> (hanya menarik data yang baru diubah).
             </div>
@@ -140,7 +140,7 @@ export async function openCloudSyncModal() {
         <!-- Tab 2: Google Sheets -->
         <div id="tabContentGoogle" style="display: none; flex-direction: column; gap: 1rem;">
           <div style="background: rgba(52, 199, 89, 0.08); border: 1px solid rgba(52, 199, 89, 0.25); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 700; font-size: 0.88rem; color: #1e7e34; margin-bottom: 0.25rem;">📊 Audit Trail: Google Drive / Spreadsheet Sekolah (Satu Arah)</div>
+            <div style="font-weight: 700; font-size: 0.88rem; color: #1e7e34; margin-bottom: 0.25rem;">Audit Trail: Google Drive / Spreadsheet Sekolah (Satu Arah)</div>
             <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
               Berfungsi sebagai pencatat riwayat (audit log) otomatis setiap kali terjadi mutasi siswa, jurnal guru, atau aset. Berkas spreadsheet dapat dilihat langsung oleh Kepala Sekolah di Google Drive tanpa mengubah basis data lokal.
             </div>
@@ -178,7 +178,7 @@ export async function openCloudSyncModal() {
         <!-- Tab 3: Intranet Sekolah (Offline Wi-Fi Hub) -->
         <div id="tabContentIntranet" style="display: none; flex-direction: column; gap: 1rem;">
           <div style="background: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 700; font-size: 0.88rem; color: var(--apple-orange); margin-bottom: 0.25rem;">📶 Mode Terdistribusi: Jaringan Lokal Wi-Fi SD Inpres Lonrong</div>
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--apple-orange); margin-bottom: 0.25rem;">Mode Terdistribusi: Jaringan Lokal Wi-Fi SD Inpres Lonrong</div>
             <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
               Jika sekolah mengalami kendala jaringan internet (mati lampu atau kuota habis), aplikasi dapat tetap beroperasi secara terdistribusi di ruang guru melalui jaringan Wi-Fi lokal sekolah.
             </div>
@@ -198,7 +198,7 @@ export async function openCloudSyncModal() {
         <!-- Tab 4: Disaster Recovery Backup & Restore -->
         <div id="tabContentBackup" style="display: none; flex-direction: column; gap: 1rem;">
           <div style="background: var(--apple-bg-secondary); border-radius: var(--apple-radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.25rem;">💾 Cadangan Database Mandiri (Offline JSON Backup)</div>
+            <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 0.25rem;">Cadangan Database Mandiri (Offline JSON Backup)</div>
             <div style="font-size: 0.8rem; color: var(--apple-text-secondary); line-height: 1.45;">
               Unduh seluruh isi basis data lengkap (10 tabel: Siswa, Pegawai, Sarpras, Beban Ajar, Rombel, Mutasi, Jurnal SKP, Buku Tamu, dll.) ke berkas JSON untuk disimpan di flashdisk atau drive pribadi.
             </div>

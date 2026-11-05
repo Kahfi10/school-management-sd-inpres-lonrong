@@ -86,7 +86,7 @@ export async function renderDashboardView(container: HTMLElement) {
                 ${SD_LONRONG_PROFILE.namaSekolah}
               </h1>
               <span class="solid-badge solid-badge-emerald" style="font-size: 0.72rem; padding: 0.18rem 0.55rem; font-weight: 600;">
-                ★ Akreditasi ${SD_LONRONG_PROFILE.akreditasi} • Nilai 91
+                Akreditasi ${SD_LONRONG_PROFILE.akreditasi} • Nilai 91
               </span>
             </div>
             <p style="font-size: 0.86rem; color: var(--apple-text-secondary); margin: 0; line-height: 1.45; font-weight: 400;">
@@ -147,7 +147,7 @@ export async function renderDashboardView(container: HTMLElement) {
           <div class="metric-delta">${totalLakiLaki} Laki-Laki • ${totalPerempuan} Perempuan</div>
           <div class="card-sub-info">
             <span>Kelas 1–6 • 100% NISN Valid</span>
-            <span class="card-action-arrow">→</span>
+            <svg class="card-action-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
         </div>
 
@@ -166,7 +166,7 @@ export async function renderDashboardView(container: HTMLElement) {
           <div class="metric-delta">1 Kepsek • 6 Guru • 1 Operator</div>
           <div class="card-sub-info">
             <span>${guruMemenuhiBeban}/${guruKelasMapel.length} Beban 24 JJM • Dapodik</span>
-            <span class="card-action-arrow">→</span>
+            <svg class="card-action-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ export async function renderDashboardView(container: HTMLElement) {
           <div class="metric-delta">${unitKibB} TIK • ${unitKibC} Gedung • ${unitKibE} Buku</div>
           <div class="card-sub-info">
             <span>${totalSarprasItem} Aset KIB B, C, E Terdaftar</span>
-            <span class="card-action-arrow">→</span>
+            <svg class="card-action-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
         </div>
 
@@ -206,7 +206,7 @@ export async function renderDashboardView(container: HTMLElement) {
           <div class="metric-delta">${totalBukuTamu} Tamu Resmi Kedinasan</div>
           <div class="card-sub-info">
             <span>${totalJurnal - pendingJurnalCount} Disetujui • E-Kinerja BKN</span>
-            <span class="card-action-arrow">→</span>
+            <svg class="card-action-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
         </div>
       </div>
@@ -334,7 +334,7 @@ export async function renderDashboardView(container: HTMLElement) {
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem; color: var(--apple-text-tertiary);">
                   <span>Menemui: <strong>${t.pegawaiDituju}</strong></span>
                   <a href="https://wa.me/${t.noWhatsapp.replace(/^0/, '62')}" target="_blank" style="color: var(--apple-blue); font-weight: 600; text-decoration: none;">
-                    WhatsApp Tamu ↗
+                    WhatsApp Tamu
                   </a>
                 </div>
               </div>
@@ -478,7 +478,7 @@ export async function renderDashboardView(container: HTMLElement) {
             callbacks: {
               afterLabel: (item) => {
                 const val = item.raw as number;
-                return val >= 24 ? '✓ Memenuhi Standar Minimal 24 Jam' : `! Kurang ${24 - val} Jam dari Standar`;
+                return val >= 24 ? 'Memenuhi Standar Minimal 24 Jam' : `Kurang ${24 - val} Jam dari Standar`;
               },
             },
           },

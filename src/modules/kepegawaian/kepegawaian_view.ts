@@ -219,7 +219,7 @@ export async function renderKepegawaianView(container: HTMLElement) {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; padding-top: 0.65rem; border-top: 1px solid var(--apple-border-subtle); font-size: 0.8rem; color: var(--apple-text-secondary);">
                   <a href="https://wa.me/${p.noHp.replace(/^0/, '62')}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 500; color: var(--apple-blue); text-decoration: none;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                    ${p.noHp} (WhatsApp ↗)
+                    ${p.noHp} (WhatsApp)
                   </a>
                   <button class="apple-btn apple-btn-ghost btn-delete-pegawai" data-id="${p.id}" style="color: var(--apple-red); font-size: 0.8rem; padding: 0.35rem 0.6rem;">
                     Hapus

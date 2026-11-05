@@ -100,7 +100,7 @@ export async function openUserManagementModal(preselectedPegawaiId?: string) {
   function renderUserCard(u: UserAccount): string {
     const isSuper = u.isSuperAdmin || u.username === 'admin';
     const roleBadge = isSuper
-      ? `<span style="background: rgba(0, 122, 255, 0.15); color: var(--apple-blue); border: 1px solid rgba(0, 122, 255, 0.25); font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px;">👑 Super Admin (Utama)</span>`
+      ? `<span style="background: rgba(0, 122, 255, 0.15); color: var(--apple-blue); border: 1px solid rgba(0, 122, 255, 0.25); font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px;">Super Admin (Utama)</span>`
       : u.role === 'tendik'
       ? `<span style="background: rgba(255, 149, 0, 0.12); color: var(--apple-orange); font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px;">Operator / Tendik</span>`
       : `<span style="background: rgba(52, 199, 89, 0.12); color: var(--apple-green); font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px;">Guru Kelas / Mapel</span>`;

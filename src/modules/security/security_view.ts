@@ -60,7 +60,7 @@ export function openSecurityCenterModal() {
               1. 20 Pilar Audit Live
             </button>
             <button class="segment-btn ${currentTab === 'password' ? 'active' : ''}" data-tab="password">
-              2. Kredensial & Sandi ${isDefaultPass ? '⚠️' : ''}
+              2. Kredensial & Sandi ${isDefaultPass ? '(Perlu Diperbarui)' : ''}
             </button>
             <button class="segment-btn ${currentTab === 'backup' ? 'active' : ''}" data-tab="backup">
               3. Backup & Restore

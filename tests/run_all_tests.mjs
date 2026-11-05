@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 
 console.log('====================================================');
-console.log('🧪 SD INPRES LONRONG - UNIFIED AUTOMATED TEST SUITE');
+console.log('SD INPRES LONRONG - UNIFIED AUTOMATED TEST SUITE');
 console.log('====================================================\n');
 
 let passedTests = 0;
@@ -10,10 +10,10 @@ let failedTests = 0;
 
 function assert(condition, testName) {
   if (condition) {
-    console.log(`  ✅ PASS: ${testName}`);
+    console.log(`  [PASS]: ${testName}`);
     passedTests++;
   } else {
-    console.error(`  ❌ FAIL: ${testName}`);
+    console.error(`  [FAIL]: ${testName}`);
     failedTests++;
   }
 }
@@ -366,7 +366,7 @@ await testUserDb.delete();
 // SUMMARY
 // -----------------------------------------------------------------
 console.log('\n====================================================');
-console.log(`📊 FINAL TEST REPORT: ${passedTests} PASSED, ${failedTests} FAILED`);
+console.log(`FINAL TEST REPORT: ${passedTests} PASSED, ${failedTests} FAILED`);
 console.log('====================================================\n');
 
 if (failedTests > 0) {
