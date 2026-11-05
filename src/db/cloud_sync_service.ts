@@ -545,11 +545,14 @@ CREATE TABLE IF NOT EXISTS public.users (
     username TEXT UNIQUE NOT NULL,
     "passwordHash" TEXT NOT NULL,
     role TEXT NOT NULL,
+    "isSuperAdmin" BOOLEAN DEFAULT false,
+    "isActive" BOOLEAN DEFAULT true,
     "pinCode" TEXT NOT NULL,
     "namaLengkap" TEXT NOT NULL,
     "nipNuptk" TEXT,
     "pegawaiId" TEXT,
     "lastLogin" TEXT,
+    "updatedAt" TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -592,6 +595,15 @@ CREATE TABLE IF NOT EXISTS public."bebanAjar" (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Migrasi Kolom Tambahan (Idempotent - aman dieksekusi jika tabel sudah ada sebelumnya)
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS "isSuperAdmin" BOOLEAN DEFAULT false;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN DEFAULT true;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS "updatedAt" TEXT;
+ALTER TABLE public.siswa ADD COLUMN IF NOT EXISTS "updatedAt" TEXT;
+ALTER TABLE public.pegawai ADD COLUMN IF NOT EXISTS "updatedAt" TEXT;
+ALTER TABLE public.sarpras ADD COLUMN IF NOT EXISTS "updatedAt" TEXT;
+ALTER TABLE public."jurnalKinerja" ADD COLUMN IF NOT EXISTS "updatedAt" TEXT;
+
 -- Enable Row Level Security (RLS) & Public Access untuk Anon Key (SD Intranet)
 ALTER TABLE public.siswa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pegawai ENABLE ROW LEVEL SECURITY;
@@ -604,15 +616,35 @@ ALTER TABLE public."kelasRombel" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."mutasiSiswa" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."bebanAjar" ENABLE ROW LEVEL SECURITY;
 
+-- Idempotent Policy Creation (Hapus dahulu jika ada, lalu buat baru)
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public.siswa;
 CREATE POLICY "Allow public read-write for anon" ON public.siswa FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public.pegawai;
 CREATE POLICY "Allow public read-write for anon" ON public.pegawai FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public.sarpras;
 CREATE POLICY "Allow public read-write for anon" ON public.sarpras FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public."jurnalKinerja";
 CREATE POLICY "Allow public read-write for anon" ON public."jurnalKinerja" FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public."bukuTamu";
 CREATE POLICY "Allow public read-write for anon" ON public."bukuTamu" FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public."arsipDigital";
 CREATE POLICY "Allow public read-write for anon" ON public."arsipDigital" FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public.users;
 CREATE POLICY "Allow public read-write for anon" ON public.users FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public."kelasRombel";
 CREATE POLICY "Allow public read-write for anon" ON public."kelasRombel" FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public."mutasiSiswa";
 CREATE POLICY "Allow public read-write for anon" ON public."mutasiSiswa" FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read-write for anon" ON public."bebanAjar";
 CREATE POLICY "Allow public read-write for anon" ON public."bebanAjar" FOR ALL USING (true) WITH CHECK (true);
 `;
   }
