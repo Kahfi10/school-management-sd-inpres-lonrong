@@ -9,40 +9,21 @@ export async function initializeDatabaseSeed() {
   console.log('[Seed] Seeding initial authentic data for SD Inpres Lonrong...');
   db.isSeeding = true;
 
-  // 1. Initial Users (Smart Login RBAC)
+  // 1. Initial Users (Hanya 1 Super Admin Utama)
   const initialUsers: UserAccount[] = [
     {
-      id: 'usr-admin-01',
+      id: 'usr-superadmin',
       username: 'admin',
       passwordHash: 'admin123',
       role: 'admin',
+      isSuperAdmin: true,
+      isActive: true,
       pinCode: '1234',
       namaLengkap: 'Drs. H. Syamsuddin, M.Pd.',
       nipNuptk: '19680512 199307 1 002',
       pegawaiId: 'pgw-01',
       lastLogin: new Date().toISOString(),
-    },
-    {
-      id: 'usr-tendik-01',
-      username: 'tendik',
-      passwordHash: 'tendik123',
-      role: 'tendik',
-      pinCode: '2345',
-      namaLengkap: 'Andi Nurul Qalbi, S.Kom.',
-      nipNuptk: '19950814 202203 2 005',
-      pegawaiId: 'pgw-08',
-      lastLogin: new Date().toISOString(),
-    },
-    {
-      id: 'usr-guru-01',
-      username: 'guru',
-      passwordHash: 'guru123',
-      role: 'guru',
-      pinCode: '3456',
-      namaLengkap: 'Sitti Rahmah, S.Pd.',
-      nipNuptk: '19820315 200801 2 018',
-      pegawaiId: 'pgw-02',
-      lastLogin: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     },
   ];
 

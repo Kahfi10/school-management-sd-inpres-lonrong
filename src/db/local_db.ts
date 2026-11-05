@@ -5,11 +5,15 @@ export interface UserAccount {
   username: string;
   passwordHash: string;
   role: 'admin' | 'tendik' | 'guru';
+  isSuperAdmin?: boolean;
+  isActive?: boolean;
   pinCode: string;
   namaLengkap: string;
   nipNuptk?: string;
   pegawaiId?: string;
   lastLogin?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PegawaiRecord {

@@ -262,6 +262,107 @@ assert(isMessageAlreadyHandled('msg_001'), 'Duplicate message delivery is droppe
 assert(!isMessageAlreadyHandled('msg_002'), 'Subsequent message msg_002 is accepted');
 
 // -----------------------------------------------------------------
+// 6. Single Super Admin & Teacher Account Governance Tests
+// -----------------------------------------------------------------
+console.log('\n--- 6. Testing Single Super Admin & User Governance ---');
+
+const testUserDb = new Dexie('LonrongUserTestDB');
+testUserDb.version(1).stores({
+  users: 'id, &username, role, pinCode, pegawaiId',
+});
+
+// Seed Initial Single Super Admin
+await testUserDb.users.add({
+  id: 'usr-superadmin',
+  username: 'admin',
+  passwordHash: (await hashPassword('admin123')).hash,
+  role: 'admin',
+  isSuperAdmin: true,
+  pinCode: '1234',
+  namaLengkap: 'Drs. H. Syamsuddin, M.Pd.',
+});
+
+let currentUser = { id: 'usr-superadmin', username: 'admin', role: 'admin', isSuperAdmin: true };
+
+function isSuperAdminUser(user) {
+  return user?.isSuperAdmin === true || (user?.role === 'admin' && user?.username === 'admin');
+}
+
+async function createUserSimulated(actor, data) {
+  if (!isSuperAdminUser(actor)) {
+    return { success: false, message: 'Akses ditolak: Hanya Super Admin yang berhak membuat akun baru.' };
+  }
+  if (data.role === 'admin') {
+    return { success: false, message: 'Ditolak: Sistem hanya mengizinkan 1 Super Admin utama di sekolah.' };
+  }
+  const cleanUsername = data.username.trim().toLowerCase();
+  const existing = await testUserDb.users.where('username').equals(cleanUsername).first();
+  if (existing) {
+    return { success: false, message: 'Username sudah digunakan' };
+  }
+  const existingPin = await testUserDb.users.where('pinCode').equals(data.pinCode).first();
+  if (existingPin) {
+    return { success: false, message: 'PIN sudah digunakan' };
+  }
+
+  const hashedPassword = (await hashPassword(data.password)).hash;
+  const newUser = {
+    id: `usr-${Date.now()}`,
+    username: cleanUsername,
+    passwordHash: hashedPassword,
+    role: data.role,
+    isSuperAdmin: false,
+    pinCode: data.pinCode,
+    namaLengkap: data.namaLengkap,
+  };
+  await testUserDb.users.add(newUser);
+  return { success: true, user: newUser };
+}
+
+async function deleteUserSimulated(actor, targetId) {
+  if (!isSuperAdminUser(actor)) {
+    return { success: false, message: 'Akses ditolak' };
+  }
+  const target = await testUserDb.users.get(targetId);
+  if (!target) return { success: false, message: 'User not found' };
+  if (target.isSuperAdmin || target.username === 'admin') {
+    return { success: false, message: 'Proteksi: Akun Super Admin utama tidak dapat dihapus!' };
+  }
+  await testUserDb.users.delete(targetId);
+  return { success: true };
+}
+
+// 1. Non-superadmin cannot create users
+const nonSuperRes = await createUserSimulated({ id: 'usr-guru', role: 'guru' }, { username: 'guru2', role: 'guru', password: '123', pinCode: '2222', namaLengkap: 'Guru' });
+assert(!nonSuperRes.success && nonSuperRes.message.includes('Akses ditolak'), 'Non-superadmin is blocked from creating accounts');
+
+// 2. Cannot create a second admin
+const secondAdminRes = await createUserSimulated(currentUser, { username: 'admin2', role: 'admin', password: 'password123', pinCode: '5555', namaLengkap: 'Admin 2' });
+assert(!secondAdminRes.success && secondAdminRes.message.includes('1 Super Admin'), 'Creation of secondary admin is blocked (Strict 1 Super Admin Policy)');
+
+// 3. Super Admin creates teacher account
+const createTeacherRes = await createUserSimulated(currentUser, { username: 'rahmah', role: 'guru', password: 'password123', pinCode: '3456', namaLengkap: 'Sitti Rahmah, S.Pd.' });
+assert(createTeacherRes.success && createTeacherRes.user.passwordHash.length === 64, 'Super admin successfully provisions teacher account with PBKDF2 hash');
+
+// 4. Duplicate username rejected
+const dupUserRes = await createUserSimulated(currentUser, { username: 'rahmah', role: 'guru', password: 'password123', pinCode: '9999', namaLengkap: 'Rahmah 2' });
+assert(!dupUserRes.success && dupUserRes.message.includes('Username sudah digunakan'), 'Duplicate username creation is strictly rejected');
+
+// 5. Duplicate PIN rejected
+const dupPinRes = await createUserSimulated(currentUser, { username: 'guru_baru', role: 'guru', password: 'password123', pinCode: '3456', namaLengkap: 'Guru Baru' });
+assert(!dupPinRes.success && dupPinRes.message.includes('PIN sudah digunakan'), 'Duplicate PIN creation is strictly rejected');
+
+// 6. Super Admin account is undeletable
+const deleteAdminRes = await deleteUserSimulated(currentUser, 'usr-superadmin');
+assert(!deleteAdminRes.success && deleteAdminRes.message.includes('Proteksi'), 'Super Admin account is permanently undeletable');
+
+// 7. Super Admin deletes teacher account
+const deleteTeacherRes = await deleteUserSimulated(currentUser, createTeacherRes.user.id);
+assert(deleteTeacherRes.success, 'Super Admin successfully deprovisions teacher account');
+
+await testUserDb.delete();
+
+// -----------------------------------------------------------------
 // SUMMARY
 // -----------------------------------------------------------------
 console.log('\n====================================================');

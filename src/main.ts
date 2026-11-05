@@ -12,6 +12,7 @@ import { renderBukuTamuView } from './modules/bukutamu/bukutamu_view';
 import { openSecurityCenterModal } from './modules/security/security_view';
 import { openCloudSyncModal } from './modules/sync/cloud_sync_modal';
 import { openAdminSettingsModal } from './modules/settings/settings_modal';
+import { openUserManagementModal } from './modules/users/user_management_modal';
 import { renderPageSkeleton } from './utils/skeleton_loader';
 import { showAlert, showConfirmDialog } from './utils/apple_alerts';
 import type { UserAccount } from './db/local_db';
@@ -434,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Global Card & Shortcut Navigation Handler
   (window as any).appNavigate = navigateTo;
   (window as any).openAdminSettingsModal = openAdminSettingsModal;
+  (window as any).openUserManagementModal = openUserManagementModal;
   (window as any).openCloudSyncModal = openCloudSyncModal;
   (window as any).openSecurityCenterModal = openSecurityCenterModal;
   window.addEventListener('app:navigate', (e: any) => {

@@ -20,8 +20,35 @@ export class AuthService {
   }
 
   public async init(): Promise<UserAccount | null> {
+    await this.ensureSuperAdminIntegrity();
     await this.restoreSession();
     return this.currentUser;
+  }
+
+  private async ensureSuperAdminIntegrity() {
+    try {
+      const allUsers = await db.users.toArray();
+      if (allUsers.length === 0) return;
+
+      // Temukan atau tetapkan Super Admin utama
+      let superAdmin = allUsers.find((u) => u.isSuperAdmin === true || u.username === 'admin');
+      if (!superAdmin) {
+        superAdmin = allUsers.find((u) => u.role === 'admin') || allUsers[0];
+      }
+
+      if (superAdmin && (!superAdmin.isSuperAdmin || superAdmin.role !== 'admin')) {
+        await db.users.update(superAdmin.id, { isSuperAdmin: true, role: 'admin' });
+      }
+
+      // Pastikan HANYA 1 Super Admin di sistem
+      for (const u of allUsers) {
+        if (superAdmin && u.id !== superAdmin.id && u.isSuperAdmin) {
+          await db.users.update(u.id, { isSuperAdmin: false });
+        }
+      }
+    } catch (e) {
+      console.warn('[AuthService] Super admin integrity check deferred:', e);
+    }
   }
 
   private async restoreSession() {
@@ -252,6 +279,192 @@ export class AuthService {
 
     this.notify();
     return { success: true, message: 'Kata sandi berhasil diperbarui dan diamankan secara kriptografis!' };
+  }
+
+  public isSuperAdmin(user?: UserAccount | null): boolean {
+    const u = user !== undefined ? user : this.currentUser;
+    if (!u) return false;
+    return u.isSuperAdmin === true || (u.role === 'admin' && u.username === 'admin');
+  }
+
+  public async getAllUsers(): Promise<UserAccount[]> {
+    const users = await db.users.toArray();
+    return users.sort((a, b) => {
+      if (a.isSuperAdmin || a.username === 'admin') return -1;
+      if (b.isSuperAdmin || b.username === 'admin') return 1;
+      return a.namaLengkap.localeCompare(b.namaLengkap);
+    });
+  }
+
+  public async createUser(data: {
+    username: string;
+    password: string;
+    pinCode: string;
+    role: 'guru' | 'tendik';
+    namaLengkap: string;
+    nipNuptk?: string;
+    pegawaiId?: string;
+  }): Promise<{ success: boolean; message: string; user?: UserAccount }> {
+    if (!this.isSuperAdmin()) {
+      return { success: false, message: 'Akses ditolak: Hanya Super Admin yang berhak membuat akun pengguna baru.' };
+    }
+
+    if ((data.role as any) === 'admin') {
+      return { success: false, message: 'Ditolak: Sistem hanya mengizinkan 1 Super Admin utama di sekolah.' };
+    }
+
+    const cleanUsername = data.username.trim().toLowerCase();
+    if (!cleanUsername || cleanUsername.length < 3) {
+      return { success: false, message: 'Nama pengguna minimal 3 karakter huruf/angka.' };
+    }
+    if (!/^[a-z0-9_.-]+$/.test(cleanUsername)) {
+      return { success: false, message: 'Nama pengguna hanya boleh mengandung huruf kecil, angka, titik, dan garis bawah.' };
+    }
+
+    const existingUser = await db.users.where('username').equals(cleanUsername).first();
+    if (existingUser) {
+      return { success: false, message: `Nama pengguna "${cleanUsername}" sudah digunakan oleh akun lain.` };
+    }
+
+    const cleanPin = data.pinCode.trim();
+    if (!/^\d{4}$/.test(cleanPin)) {
+      return { success: false, message: 'PIN Cepat wajib terdiri dari tepat 4 digit angka.' };
+    }
+
+    const existingPin = await db.users.where('pinCode').equals(cleanPin).first();
+    if (existingPin) {
+      return { success: false, message: `PIN Cepat "${cleanPin}" sudah digunakan oleh ${existingPin.namaLengkap}. Pilih kombinasi 4 digit lain.` };
+    }
+
+    if (!data.password || data.password.length < 6) {
+      return { success: false, message: 'Kata sandi minimal 6 karakter.' };
+    }
+
+    if (!data.namaLengkap || data.namaLengkap.trim().length < 2) {
+      return { success: false, message: 'Nama lengkap wajib diisi.' };
+    }
+
+    const passwordHash = await hashPassword(data.password);
+    const newId = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const nowIso = new Date().toISOString();
+
+    const newUser: UserAccount = {
+      id: newId,
+      username: cleanUsername,
+      passwordHash,
+      role: data.role,
+      isSuperAdmin: false,
+      isActive: true,
+      pinCode: cleanPin,
+      namaLengkap: data.namaLengkap.trim(),
+      nipNuptk: data.nipNuptk?.trim() || undefined,
+      pegawaiId: data.pegawaiId || undefined,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+
+    await db.users.add(newUser);
+
+    await logSecurityEvent({
+      actorUsername: this.currentUser?.username || 'admin',
+      actorRole: 'admin',
+      action: 'USER_CREATED_BY_SUPERADMIN',
+      resource: 'User_Management',
+      status: 'SUCCESS',
+      details: `Super Admin menerbitkan akun baru untuk ${newUser.namaLengkap} (@${newUser.username}) dengan peran ${newUser.role}`,
+    });
+
+    return {
+      success: true,
+      message: `Akun untuk ${newUser.namaLengkap} (@${newUser.username}) berhasil diterbitkan!`,
+      user: newUser,
+    };
+  }
+
+  public async resetUserCredentials(
+    userId: string,
+    newPassword?: string,
+    newPin?: string
+  ): Promise<{ success: boolean; message: string }> {
+    if (!this.isSuperAdmin()) {
+      return { success: false, message: 'Akses ditolak: Hanya Super Admin yang berhak mereset kredensial pengguna.' };
+    }
+
+    const targetUser = await db.users.get(userId);
+    if (!targetUser) {
+      return { success: false, message: 'Pengguna tidak ditemukan.' };
+    }
+
+    const updates: Partial<UserAccount> = { updatedAt: new Date().toISOString() };
+
+    if (newPassword && newPassword.trim()) {
+      if (newPassword.trim().length < 6) {
+        return { success: false, message: 'Kata sandi baru minimal 6 karakter.' };
+      }
+      updates.passwordHash = await hashPassword(newPassword.trim());
+    }
+
+    if (newPin && newPin.trim()) {
+      const cleanPin = newPin.trim();
+      if (!/^\d{4}$/.test(cleanPin)) {
+        return { success: false, message: 'PIN Cepat wajib terdiri dari 4 digit angka.' };
+      }
+      const existingPin = await db.users.where('pinCode').equals(cleanPin).first();
+      if (existingPin && existingPin.id !== userId) {
+        return { success: false, message: `PIN Cepat "${cleanPin}" sudah digunakan akun lain.` };
+      }
+      updates.pinCode = cleanPin;
+    }
+
+    await db.users.update(userId, updates);
+
+    await logSecurityEvent({
+      actorUsername: this.currentUser?.username || 'admin',
+      actorRole: 'admin',
+      action: 'USER_CREDENTIALS_RESET_BY_SUPERADMIN',
+      resource: 'User_Management',
+      status: 'SUCCESS',
+      details: `Super Admin mereset kredensial akun @${targetUser.username} (${targetUser.namaLengkap})`,
+    });
+
+    return {
+      success: true,
+      message: `Kredensial untuk @${targetUser.username} berhasil diperbarui!`,
+    };
+  }
+
+  public async deleteUser(userId: string): Promise<{ success: boolean; message: string }> {
+    if (!this.isSuperAdmin()) {
+      return { success: false, message: 'Akses ditolak: Hanya Super Admin yang berhak menghapus akun pengguna.' };
+    }
+
+    const targetUser = await db.users.get(userId);
+    if (!targetUser) {
+      return { success: false, message: 'Pengguna tidak ditemukan.' };
+    }
+
+    if (targetUser.isSuperAdmin || targetUser.username === 'admin' || targetUser.id === this.currentUser?.id) {
+      return {
+        success: false,
+        message: 'Proteksi Keamanan: Akun Super Admin utama bersifat permanen dan tidak dapat dihapus!',
+      };
+    }
+
+    await db.users.delete(userId);
+
+    await logSecurityEvent({
+      actorUsername: this.currentUser?.username || 'admin',
+      actorRole: 'admin',
+      action: 'USER_DELETED_BY_SUPERADMIN',
+      resource: 'User_Management',
+      status: 'SUCCESS',
+      details: `Super Admin menghapus akun @${targetUser.username} (${targetUser.namaLengkap})`,
+    });
+
+    return {
+      success: true,
+      message: `Akun @${targetUser.username} (${targetUser.namaLengkap}) berhasil dihapus.`,
+    };
   }
 
   public async switchRoleQuick(role: 'admin' | 'tendik' | 'guru') {

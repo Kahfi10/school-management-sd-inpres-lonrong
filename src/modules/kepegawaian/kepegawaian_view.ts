@@ -1,17 +1,22 @@
 import { db, type PegawaiRecord, type BebanAjarRecord } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
 import { showAlert, showConfirmDialog } from '../../utils/apple_alerts';
+import { authService } from '../auth/auth_service';
+import { openUserManagementModal } from '../users/user_management_modal';
 
 export async function renderKepegawaianView(container: HTMLElement) {
   async function loadData() {
     const list = await db.pegawai.toArray();
     const bebanList = await db.bebanAjar.toArray();
     const rombelList = await db.kelasRombel.toArray();
-    return { list, bebanList, rombelList };
+    const userList = await db.users.toArray();
+    return { list, bebanList, rombelList, userList };
   }
 
   async function renderContent() {
-    const { list, bebanList, rombelList } = await loadData();
+    const { list, bebanList, rombelList, userList } = await loadData();
+    const isSuper = authService.isSuperAdmin();
+    const userMap = new Map(userList.map((u) => [u.pegawaiId, u]));
 
     // Map teaching hours per pegawai
     const bebanMap: Record<string, BebanAjarRecord[]> = {};
@@ -40,7 +45,17 @@ export async function renderKepegawaianView(container: HTMLElement) {
               Manajemen Data GTK & Alokasi Jam Mengajar Kurikulum Merdeka (Standar 24 Jam/Minggu)
             </p>
           </div>
-          <div style="display: flex; gap: 0.45rem;">
+          <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+            ${
+              isSuper
+                ? `
+              <button class="apple-btn apple-btn-secondary" id="btnKelolaAkunGuru" style="color: var(--apple-blue); font-weight: 600;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Kelola Akun Guru (${userList.length})
+              </button>
+            `
+                : ''
+            }
             <button class="apple-btn apple-btn-secondary" id="btnAturBeban">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               Tambah Beban Ajar
@@ -126,6 +141,16 @@ export async function renderKepegawaianView(container: HTMLElement) {
                     <div style="display: flex; justify-content: space-between;">
                       <span style="color: var(--apple-text-secondary); font-weight: 500;">Pangkat / Golongan:</span>
                       <strong style="color: var(--apple-text-primary); font-weight: 600; text-align: right;">${p.pangkatGolongan}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px dashed var(--apple-border-subtle);">
+                      <span style="color: var(--apple-text-secondary); font-weight: 500;">Akun Login:</span>
+                      ${
+                        userMap.get(p.id)
+                          ? `<strong style="color: var(--apple-blue); font-size: 0.78rem;">@${userMap.get(p.id)!.username} (${userMap.get(p.id)!.role})</strong>`
+                          : isSuper
+                          ? `<button class="apple-btn apple-btn-ghost btn-create-user-pegawai" data-pegawai-id="${p.id}" style="color: var(--apple-blue); font-size: 0.74rem; padding: 0.1rem 0.4rem; font-weight: 600;">+ Buatkan Akun</button>`
+                          : `<span style="color: var(--apple-text-tertiary); font-size: 0.75rem;">Belum dibuat</span>`
+                      }
                     </div>
                   </div>
 
@@ -345,6 +370,17 @@ export async function renderKepegawaianView(container: HTMLElement) {
     // Modal triggers
     const modalPegawai = container.querySelector('#modalTambahPegawai') as HTMLElement;
     const modalBeban = container.querySelector('#modalAturBeban') as HTMLElement;
+
+    container.querySelector('#btnKelolaAkunGuru')?.addEventListener('click', () => {
+      openUserManagementModal();
+    });
+
+    container.querySelectorAll('.btn-create-user-pegawai').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const pid = (e.currentTarget as HTMLElement).dataset.pegawaiId;
+        openUserManagementModal(pid);
+      });
+    });
 
     container.querySelector('#btnTambahPegawai')?.addEventListener('click', () => {
       modalPegawai.classList.add('active');

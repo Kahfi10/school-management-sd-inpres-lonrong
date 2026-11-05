@@ -1,13 +1,13 @@
 import { authService } from '../auth/auth_service';
 import { openCloudSyncModal } from '../sync/cloud_sync_modal';
 import { openSecurityCenterModal } from '../security/security_view';
+import { openUserManagementModal } from '../users/user_management_modal';
 
 export function openAdminSettingsModal() {
   const modalRoot = document.getElementById('modalRoot');
   if (!modalRoot) return;
 
-  const currentUser = authService.getCurrentUser();
-  const currentRole = currentUser?.role || 'admin';
+  const isSuper = authService.isSuperAdmin();
 
   const modalHtml = `
     <div class="modal-backdrop active" id="adminSettingsBackdrop" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1rem;">
@@ -30,7 +30,28 @@ export function openAdminSettingsModal() {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <!-- Item 1: Cloud Sync -->
+          
+          <!-- Item 1: Manajemen Akun Guru (Khusus Super Admin) -->
+          ${
+            isSuper
+              ? `
+            <div style="background: rgba(0, 122, 255, 0.05); border: 1px solid rgba(0, 122, 255, 0.2); border-radius: var(--radius-md); padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+              <div>
+                <div style="font-weight: 700; font-size: 0.9rem; color: var(--apple-blue); display: flex; align-items: center; gap: 0.4rem;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  Kelola Akun Guru & Tendik
+                </div>
+                <div style="font-size: 0.78rem; color: var(--apple-text-secondary); margin-top: 3px;">Buatkan akun baru untuk guru, kelola hak akses, & reset kata sandi</div>
+              </div>
+              <button class="apple-btn apple-btn-primary" id="btnLaunchUserMgmt" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; white-space: nowrap;">
+                Kelola Akun
+              </button>
+            </div>
+            `
+              : ''
+          }
+
+          <!-- Item 2: Cloud Sync -->
           <div style="background: var(--apple-surface-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--radius-md); padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
             <div>
               <div style="font-weight: 600; font-size: 0.9rem; color: var(--apple-text-primary); display: flex; align-items: center; gap: 0.4rem;">
@@ -44,7 +65,7 @@ export function openAdminSettingsModal() {
             </button>
           </div>
 
-          <!-- Item 2: Security & Backup -->
+          <!-- Item 3: Security & Backup -->
           <div style="background: var(--apple-surface-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--radius-md); padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
             <div>
               <div style="font-weight: 600; font-size: 0.9rem; color: var(--apple-text-primary); display: flex; align-items: center; gap: 0.4rem;">
@@ -58,16 +79,6 @@ export function openAdminSettingsModal() {
             </button>
           </div>
 
-          <!-- Item 3: Quick Role Switch (for Testing) -->
-          <div style="background: var(--apple-surface-secondary); border: 1px solid var(--apple-border-subtle); border-radius: var(--radius-md); padding: 0.85rem 1rem;">
-            <div style="font-weight: 600; font-size: 0.9rem; color: var(--apple-text-primary); margin-bottom: 0.25rem;">Uji Coba Peran Akun</div>
-            <div style="font-size: 0.78rem; color: var(--apple-text-secondary); margin-bottom: 0.75rem;">Beralih mode untuk menguji tampilan sebagai:</div>
-            <div class="apple-segmented-control" style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr;">
-              <button class="segment-btn ${currentRole === 'admin' ? 'active' : ''}" data-modal-switch="admin">Admin (Kepsek)</button>
-              <button class="segment-btn ${currentRole === 'tendik' ? 'active' : ''}" data-modal-switch="tendik">Tendik (Operator)</button>
-              <button class="segment-btn ${currentRole === 'guru' ? 'active' : ''}" data-modal-switch="guru">Guru Kelas</button>
-            </div>
-          </div>
         </div>
 
       </div>
@@ -85,6 +96,12 @@ export function openAdminSettingsModal() {
     if (e.target === backdrop) modalRoot.innerHTML = '';
   });
 
+  // Launch User Management Modal (Super Admin)
+  document.getElementById('btnLaunchUserMgmt')?.addEventListener('click', () => {
+    modalRoot.innerHTML = '';
+    openUserManagementModal();
+  });
+
   // Launch Cloud Sync Modal
   document.getElementById('btnLaunchCloudSync')?.addEventListener('click', () => {
     modalRoot.innerHTML = '';
@@ -95,14 +112,5 @@ export function openAdminSettingsModal() {
   document.getElementById('btnLaunchSecurityCenter')?.addEventListener('click', () => {
     modalRoot.innerHTML = '';
     openSecurityCenterModal();
-  });
-
-  // Switch role buttons
-  modalRoot.querySelectorAll('[data-modal-switch]').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
-      const targetRole = (e.currentTarget as HTMLElement).dataset.modalSwitch as 'admin' | 'tendik' | 'guru';
-      modalRoot.innerHTML = '';
-      await authService.switchRoleQuick(targetRole);
-    });
   });
 }
