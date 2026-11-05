@@ -1,6 +1,7 @@
 import { authService } from '../auth/auth_service';
 import { db, type PegawaiRecord, type UserAccount } from '../../db/local_db';
 import { syncEngine } from '../../db/sync_engine';
+import { cloudSyncService } from '../../db/cloud_sync_service';
 import { showAlert, showConfirmDialog } from '../../utils/apple_alerts';
 
 /**
@@ -43,6 +44,27 @@ export async function openUserManagementModal(preselectedPegawaiId?: string) {
     authService.getAllUsers(),
     db.pegawai.toArray(),
   ]);
+
+  // Immediately pull latest users and delta when management modal is opened
+  cloudSyncService.pullAllFromSupabase(false).then(async (res) => {
+    if (res.totalPulled > 0) {
+      const refreshedUsers = await authService.getAllUsers();
+      users.length = 0;
+      users.push(...refreshedUsers);
+      render();
+    }
+  }).catch(() => {});
+
+  // Real-time synchronization listener for cross-browser user management
+  const userChangeListener = async (e: any) => {
+    if (e.detail?.tableName === 'users' || e.detail?.tableName === 'all') {
+      const refreshed = await authService.getAllUsers();
+      users.length = 0;
+      users.push(...refreshed);
+      render();
+    }
+  };
+  window.addEventListener('lonrong:data-changed', userChangeListener);
 
   let activeTab: 'list' | 'create' = preselectedPegawaiId ? 'create' : 'list';
 
@@ -276,11 +298,13 @@ export async function openUserManagementModal(preselectedPegawaiId?: string) {
 
   function bindEvents() {
     const backdrop = document.getElementById('userMgmtBackdrop');
-    document.getElementById('btnCloseUserMgmt')?.addEventListener('click', () => {
+    const closeModal = () => {
+      window.removeEventListener('lonrong:data-changed', userChangeListener);
       modalRoot!.innerHTML = '';
-    });
+    };
+    document.getElementById('btnCloseUserMgmt')?.addEventListener('click', closeModal);
     backdrop?.addEventListener('click', (e) => {
-      if (e.target === backdrop) modalRoot!.innerHTML = '';
+      if (e.target === backdrop) closeModal();
     });
 
     // Tab buttons
@@ -333,7 +357,7 @@ export async function openUserManagementModal(preselectedPegawaiId?: string) {
           const res = await authService.deleteUser(uid);
           if (res.success) {
             // Immediately sync deletion to Supabase
-            await syncEngine.flushOutbox();
+            await syncEngine.flushOutbox(true);
             showAlert({ title: 'Akun Dihapus', message: res.message, type: 'success' });
             // Refresh users
             const refreshed = await authService.getAllUsers();
@@ -415,7 +439,7 @@ export async function openUserManagementModal(preselectedPegawaiId?: string) {
 
         if (res.success) {
           // Immediately flush to Supabase Cloud
-          await syncEngine.flushOutbox();
+          await syncEngine.flushOutbox(true);
 
           const createdUsername = inputUsername.value.trim().toLowerCase();
           const createdPass = inputPassword.value.trim();
@@ -596,7 +620,7 @@ export async function openUserManagementModal(preselectedPegawaiId?: string) {
 
       if (res.success) {
         // Immediately flush outbox to Supabase Cloud
-        await syncEngine.flushOutbox();
+        await syncEngine.flushOutbox(true);
 
         // Refresh user list in local state
         const refreshed = await authService.getAllUsers();

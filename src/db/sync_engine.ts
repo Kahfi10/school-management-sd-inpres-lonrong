@@ -43,6 +43,50 @@ class RealTimeSyncEngine {
     this.initPeriodicHeartbeat();
     this.initServiceWorkerSyncBridge();
     this.registerLocalDbHooks();
+    this.initDomEventListener();
+    this.initWindowFocusListener();
+  }
+
+  private initDomEventListener() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('lonrong:data-changed', (event: any) => {
+        const detail = event?.detail;
+        if (!detail) return;
+        // If event was triggered by cloud_pull, forward to programmatic dataListeners
+        if (detail.recordId === 'cloud_pull') {
+          for (const listener of this.dataListeners) {
+            try {
+              listener(detail.tableName, detail.action, detail.recordId);
+            } catch (err) {
+              console.error('[RealTimeSync] Error in data listener on cloud pull:', err);
+            }
+          }
+          this.emitTelemetry();
+        }
+      });
+    }
+  }
+
+  private initWindowFocusListener() {
+    if (typeof window !== 'undefined') {
+      let focusDebounceTimer: any = null;
+      const handleActive = () => {
+        if (!this.networkOnline || this.isSyncing) return;
+        if (focusDebounceTimer) clearTimeout(focusDebounceTimer);
+        focusDebounceTimer = setTimeout(() => {
+          this.flushOutbox(true).then(() => {
+            cloudSyncService.pullAllFromSupabase(false).catch(() => {});
+          });
+        }, 150);
+      };
+
+      window.addEventListener('focus', handleActive);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          handleActive();
+        }
+      });
+    }
   }
 
   private initServiceWorkerSyncBridge() {
@@ -161,12 +205,13 @@ class RealTimeSyncEngine {
       this.emitTelemetry();
     }, 5000);
 
-    // Periodic check every 30 seconds for any missed items
-    setInterval(() => {
+    // Periodic check every 8 seconds for cross-browser bidirectional cloud sync
+    setInterval(async () => {
       if (this.networkOnline && !this.isSyncing) {
-        this.flushOutbox();
+        await this.flushOutbox();
+        await cloudSyncService.pullAllFromSupabase(false).catch(() => {});
       }
-    }, 30000);
+    }, 8000);
   }
 
   /**
@@ -418,6 +463,9 @@ class RealTimeSyncEngine {
     if (this.isSyncing || !this.networkOnline) {
       return { processed: 0, errors: 0 };
     }
+
+    // Brief 30ms yield to ensure any asynchronous Dexie mutation hooks complete queueing
+    await new Promise((resolve) => setTimeout(resolve, 30));
 
     if (retryFailed) {
       try {

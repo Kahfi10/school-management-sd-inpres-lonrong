@@ -1,5 +1,5 @@
 // Service Worker for SD Inpres Lonrong - SIM SmartEdu (NPSN: 40304087)
-const CACHE_NAME = 'lonrong-smartedu-v1.0.6';
+const CACHE_NAME = 'lonrong-smartedu-v1.0.7';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

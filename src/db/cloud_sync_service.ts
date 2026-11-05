@@ -651,6 +651,7 @@ export class CloudSyncService {
     const cleanUrl = this.config.supabaseUrl.trim().replace(/\/+$/, '');
     let totalPulled = 0;
     let errors = 0;
+    const updatedTables: string[] = [];
 
     // Enable Silent Pull Guard to ensure local IndexedDB hooks do not echo mutations to outbox
     db.isSyncPulling = true;
@@ -658,17 +659,17 @@ export class CloudSyncService {
     try {
       const lastSync = this.config.lastSyncTimestamp;
       const useDelta = !forceFullSync && lastSync !== null && Date.now() - lastSync < 30 * 24 * 3600 * 1000;
-      const lastSyncIso = lastSync ? new Date(lastSync).toISOString() : null;
+      // 2-minute safety buffer backwards for clock drift tolerance across devices
+      const safeSyncIso = lastSync ? new Date(Math.max(0, lastSync - 120000)).toISOString() : null;
 
-      for (const table of ALL_SYNC_TABLES) {
+      const pullTasks = ALL_SYNC_TABLES.map(async (table) => {
         try {
           let endpoint = `${cleanUrl}/rest/v1/${table}?select=*`;
 
-          // If incremental delta sync is active, query only updated records
-          if (useDelta && lastSyncIso) {
-            // Apply updatedAt delta filter if supported
+          // If incremental delta sync is active, query only updated records for large tables
+          if (useDelta && safeSyncIso) {
             if (['siswa', 'pegawai', 'sarpras', 'jurnalKinerja'].includes(table)) {
-              endpoint += `&updatedAt=gt.${encodeURIComponent(lastSyncIso)}`;
+              endpoint += `&updatedAt=gt.${encodeURIComponent(safeSyncIso)}`;
             }
           }
 
@@ -696,16 +697,27 @@ export class CloudSyncService {
                 );
 
                 await localTable.bulkPut(resolved);
-                totalPulled += resolved.length;
+                return { table, count: resolved.length, error: false };
               }
             }
+            return { table, count: 0, error: false };
           } else if (res.status !== 404) {
-            errors++;
             console.warn(`[CloudSync] Supabase pull warning for ${table}:`, res.status);
+            return { table, count: 0, error: true };
           }
         } catch (err) {
-          errors++;
           console.warn(`[CloudSync] Error pulling table ${table}:`, err);
+          return { table, count: 0, error: true };
+        }
+        return { table, count: 0, error: false };
+      });
+
+      const results = await Promise.all(pullTasks);
+      for (const r of results) {
+        if (r.error) errors++;
+        if (r.count > 0) {
+          totalPulled += r.count;
+          updatedTables.push(r.table);
         }
       }
 
@@ -713,6 +725,22 @@ export class CloudSyncService {
     } finally {
       // Always reset the Silent Pull Guard
       db.isSyncPulling = false;
+    }
+
+    // Trigger reactive UI re-renders across all active views if new data was pulled
+    if (totalPulled > 0 && typeof window !== 'undefined') {
+      for (const t of updatedTables) {
+        window.dispatchEvent(
+          new CustomEvent('lonrong:data-changed', {
+            detail: { tableName: t, action: 'update', recordId: 'cloud_pull' },
+          })
+        );
+      }
+      window.dispatchEvent(
+        new CustomEvent('lonrong:data-changed', {
+          detail: { tableName: 'all', action: 'update', recordId: 'cloud_pull' },
+        })
+      );
     }
 
     return { totalPulled, errors };

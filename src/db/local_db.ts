@@ -306,7 +306,7 @@ export class LonrongDatabase extends Dexie {
           if (dbMutationHandler) {
             dbMutationHandler(tableName, 'create', recordId, obj);
           }
-        }, 30);
+        }, 5);
       });
 
       table.hook('updating', (modifications: any, primKey: any, obj: any) => {
@@ -326,7 +326,7 @@ export class LonrongDatabase extends Dexie {
             }
             dbMutationHandler(tableName, 'update', recordId, fullUpdatedRecord);
           }
-        }, 30);
+        }, 5);
       });
 
       table.hook('deleting', (primKey: any) => {
@@ -337,7 +337,7 @@ export class LonrongDatabase extends Dexie {
           if (dbMutationHandler) {
             dbMutationHandler(tableName, 'delete', recordId, null);
           }
-        }, 30);
+        }, 5);
       });
     }
   }

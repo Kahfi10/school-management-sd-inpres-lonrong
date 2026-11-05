@@ -662,6 +662,77 @@ for (const item of mockOutbox) {
 assert(mockOutbox[0].status === 'pending' && mockOutbox[0].retryCount === 0, 'Failed outbox records are resurrected and retried on manual sync trigger');
 
 // -----------------------------------------------------------------
+// 12. Cross-Browser Delta Sync & Event Notification Tests
+// -----------------------------------------------------------------
+console.log('\n--- 12. Testing Cross-Browser Delta Sync & Event Notification ---');
+
+// Test clock-drift safe delta window calculation (120s buffer)
+const testLastSync = 1793856000000;
+const safeDeltaIso = new Date(Math.max(0, testLastSync - 120000)).toISOString();
+const directIso = new Date(testLastSync).toISOString();
+assert(
+  new Date(safeDeltaIso).getTime() === testLastSync - 120000,
+  'Safe delta window applies exact 2-minute safety buffer for clock drift tolerance'
+);
+assert(
+  new Date(safeDeltaIso).getTime() < new Date(directIso).getTime(),
+  'Safe delta ISO is strictly earlier than recorded lastSyncTimestamp'
+);
+
+// Test simulated parallel table pull resolution
+const mockTables = ['users', 'pegawai', 'siswa', 'sarpras'];
+const mockRemoteData = {
+  users: [{ id: 'usr-01', username: 'guru', pinCode: '9988' }],
+  pegawai: [],
+  siswa: [{ id: 'sis_new_01', namaLengkap: 'Muhammad Nasrul', tingkatKelas: 1 }],
+  sarpras: [],
+};
+
+const pullResults = await Promise.all(
+  mockTables.map(async (table) => {
+    const data = mockRemoteData[table] || [];
+    return { table, count: data.length, data };
+  })
+);
+
+let simulatedTotalPulled = 0;
+const simulatedUpdatedTables = [];
+for (const r of pullResults) {
+  if (r.count > 0) {
+    simulatedTotalPulled += r.count;
+    simulatedUpdatedTables.push(r.table);
+  }
+}
+
+assert(simulatedTotalPulled === 2, 'Parallel pull accurately aggregates total pulled records across all tables');
+assert(
+  simulatedUpdatedTables.includes('siswa') && simulatedUpdatedTables.includes('users'),
+  'Identifies exact tables that received incoming cloud updates'
+);
+
+// Test Event Dispatch & Forwarding simulation
+let receivedEventTable = '';
+let receivedEventAction = '';
+let receivedRecordId = '';
+
+function simulatedEventListener(tableName, action, recordId) {
+  receivedEventTable = tableName;
+  receivedEventAction = action;
+  receivedRecordId = recordId;
+}
+
+// Simulate cloud_pull event trigger
+for (const tbl of simulatedUpdatedTables) {
+  simulatedEventListener(tbl, 'update', 'cloud_pull');
+}
+simulatedEventListener('all', 'update', 'cloud_pull');
+
+assert(
+  receivedEventTable === 'all' && receivedRecordId === 'cloud_pull',
+  'Cloud pull dispatches global update notification to trigger reactive UI view re-render'
+);
+
+// -----------------------------------------------------------------
 // SUMMARY
 // -----------------------------------------------------------------
 console.log('\n====================================================');

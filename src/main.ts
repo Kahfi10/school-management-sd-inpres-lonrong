@@ -286,13 +286,23 @@ function setupSyncTelemetry() {
   });
 
   btnManual?.addEventListener('click', async () => {
-    if (text) text.textContent = 'Memperbarui data...';
-    await syncEngine.flushOutbox();
+    if (text) text.textContent = 'Menyinkronkan cloud...';
+    const flushRes = await syncEngine.flushOutbox(true);
+    const pullRes = await cloudSyncService.pullAllFromSupabase(false);
     const viewContent = document.getElementById('appViewContent');
     if (viewContent) {
       navigateTo(currentNav);
     }
-    showAlert({ title: 'Data Diperbarui', message: 'Tampilan data sekolah telah berhasil disegarkan.', type: 'info', duration: 4000 });
+    const msg =
+      pullRes.totalPulled > 0
+        ? `Sinkronisasi cloud selesai! ${pullRes.totalPulled} data baru ditarik, ${flushRes.processed} data lokal terkirim.`
+        : `Sinkronisasi cloud selesai! Data lokal dan cloud sudah mutakhir (${flushRes.processed} terkirim).`;
+    showAlert({
+      title: 'Sinkronisasi Cloud Selesai',
+      message: msg,
+      type: 'success',
+      duration: 3500,
+    });
     setTimeout(() => {
       if (text) text.textContent = 'Data Tersimpan Otomatis';
     }, 500);
@@ -328,17 +338,17 @@ function setupSyncTelemetry() {
       // Smart targeted refresh based on current view
       if (currentNav === 'dashboard') {
         renderDashboardView(viewContent);
-      } else if (currentNav === 'siswa' && (tableName === 'siswa' || tableName === 'mutasiSiswa')) {
+      } else if (currentNav === 'siswa' && (tableName === 'siswa' || tableName === 'mutasiSiswa' || tableName === 'all')) {
         renderSiswaView(viewContent);
-      } else if (currentNav === 'sarpras' && tableName === 'sarpras') {
+      } else if (currentNav === 'sarpras' && (tableName === 'sarpras' || tableName === 'all')) {
         renderSarprasView(viewContent);
-      } else if (currentNav === 'jurnal' && tableName === 'jurnalKinerja') {
+      } else if (currentNav === 'jurnal' && (tableName === 'jurnalKinerja' || tableName === 'all')) {
         renderJurnalView(viewContent);
-      } else if (currentNav === 'bukutamu' && tableName === 'bukuTamu') {
+      } else if (currentNav === 'bukutamu' && (tableName === 'bukuTamu' || tableName === 'all')) {
         renderBukuTamuView(viewContent);
-      } else if (currentNav === 'kepegawaian' && (tableName === 'pegawai' || tableName === 'bebanAjar')) {
+      } else if (currentNav === 'kepegawaian' && (tableName === 'pegawai' || tableName === 'bebanAjar' || tableName === 'all')) {
         renderKepegawaianView(viewContent);
-      } else if (currentNav === 'efiling' && tableName === 'arsipDigital') {
+      } else if (currentNav === 'efiling' && (tableName === 'arsipDigital' || tableName === 'all')) {
         renderEfilingView(viewContent);
       }
     }, 180);
