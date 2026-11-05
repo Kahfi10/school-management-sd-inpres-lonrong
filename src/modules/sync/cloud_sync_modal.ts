@@ -118,7 +118,7 @@ export async function openCloudSyncModal() {
                   Tampilkan Kunci
                 </button>
               </div>
-              <input type="password" id="inputSupabaseKey" class="apple-input" placeholder="sb_publishable_... atau eyJhbGci..." value="${escapeHtml(currentConfig.supabaseAnonKey)}" style="width: 100%; padding: 0.65rem 0.85rem; font-size: 0.88rem; font-family: monospace; background: #FFFFFF; border: 1.5px solid #CBD5E1; color: #0F172A; border-radius: 9px;" />
+              <input type="password" id="inputSupabaseKey" class="apple-input" placeholder="sb_publishable_... atau eyJhbGci..." value="${escapeHtml(currentConfig.supabaseAnonKey || 'sb_publishable_B4cB8w6LlyRqbvC90-XflA_4PVk7PsW')}" style="width: 100%; padding: 0.65rem 0.85rem; font-size: 0.88rem; font-family: monospace; background: #FFFFFF; border: 1.5px solid #CBD5E1; color: #0F172A; border-radius: 9px;" />
               <span style="font-size: 0.76rem; color: #64748B;">Salin Publishable Key (<code>sb_publishable_...</code>) dari Project Settings &gt; API</span>
             </div>
 

@@ -365,6 +365,7 @@ function initPwaServiceWorker() {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
+          reg.update();
           console.log('[PWA] Service Worker aktif:', reg.scope);
         })
         .catch((err) => {
