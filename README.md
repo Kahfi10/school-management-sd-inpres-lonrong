@@ -146,21 +146,6 @@ sd-inpres-lonrong/
    ```bash
    npm run build
    ```
-
----
-
-## 🔑 Akun Demo Pengujian
-
-Aplikasi telah dilengkapi dengan akun demo internal yang tersimpan pada penyimpanan lokal browser (IndexedDB):
-
-| Peran (Role) | Username | Kata Sandi | PIN Akses | Hak Akses Utama |
-| :--- | :--- | :--- | :---: | :--- |
-| **Super Admin / Kepsek** | `admin` | `admin123` | `1234` | Akses penuh, persetujuan E-Kinerja, mutasi siswa, & pengelolaan arsip. |
-| **Tendik / Operator** | `tendik` | `tendik123` | `1234` | Manajemen Dapodik, input siswa massal, inventaris sarpras, & buku tamu. |
-| **Dewan Guru** | `guru` | `guru123` | `1234` | Pengisian jurnal harian E-Kinerja, jadwal mengajar, & rekap kelas. |
-
----
-
 ## 🛡️ Keamanan & Privasi (20 Pilar Standar Keamanan)
 
 Aplikasi ini menerapkan arsitektur **Defense-in-Depth** tingkat industri dengan implementasi penuh pada 20 pilar keamanan:
